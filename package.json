@@ -1,0 +1,59 @@
+{
+  "name": "daily-vcs-web-renderer",
+  "description": "A library to render Daily VCS view in the browser",
+  "version": "0.0.1",
+  "license": "MIT",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.esm.js",
+  "browser": "dist/index.umd.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "engines": {
+    "node": ">=10"
+  },
+  "scripts": {
+    "start": "rollup -c -w",
+    "build": "rollup -c",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "size": "size-limit",
+    "analyze": "size-limit --why"
+  },
+  "peerDependencies": {},
+  "prettier": {
+    "printWidth": 80,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "es5"
+  },
+  "author": "harshithpabbati",
+  "size-limit": [
+    {
+      "path": "dist/index.cjs.js",
+      "limit": "10 KB"
+    },
+    {
+      "path": "dist/index.esm.js",
+      "limit": "10 KB"
+    },
+    {
+      "path": "dist/index.umd.js",
+      "limit": "10 KB"
+    }
+  ],
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.2",
+    "@rollup/plugin-node-resolve": "^15.1.0",
+    "@rollup/plugin-typescript": "^11.1.2",
+    "@size-limit/preset-small-lib": "^8.2.6",
+    "@types/node": "^20.4.0",
+    "eslint": "^8.44.0",
+    "rollup": "^3.26.2",
+    "size-limit": "^8.2.6",
+    "ts-node": "^10.9.1",
+    "tslib": "^2.6.0",
+    "typescript": "^5.1.6"
+  }
+}
