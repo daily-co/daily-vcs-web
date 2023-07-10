@@ -6,6 +6,8 @@ import type {
   ActiveVideoSlot,
   GetAssetUrlCb,
   Options,
+  VCSCallbacks,
+  Params,
 } from './types';
 
 const MAX_VIDEO_INPUT_SLOTS = 20;
@@ -28,15 +30,7 @@ export default class DailyVCSWebRenderer {
    * viewportSize is the size of the DOM element that will be rendered.
    */
   private viewportSize!: ViewportSize;
-  /**
-   * defaultParams is a map of paramId to default value.
-   * These params will be set on the VCS composition when it starts.
-   */
-  private defaultParams!: Record<string, string | number | boolean>;
-  /**
-   * getAssetUrlCb is a callback that will be called when the VCS composition needs to load an asset.
-   * It should return the URL of the asset.
-   */
+  private defaultParams!: Params;
   private getAssetUrlCb!: GetAssetUrlCb;
   /**
    * fps is the framerate of the VCS composition.
@@ -79,6 +73,7 @@ export default class DailyVCSWebRenderer {
    * It defaults to 20.
    */
   private maxVideoInputSlots: number = MAX_VIDEO_INPUT_SLOTS;
+  private callbacks: VCSCallbacks = {};
 
   /**
    * constructor
@@ -111,6 +106,7 @@ export default class DailyVCSWebRenderer {
       this.maxVideoInputSlots = opts.maxVideoInputSlots;
 
     if (opts?.fps) this.fps = opts.fps;
+    if (opts?.callbacks) this.callbacks = opts.callbacks;
 
     this.recomputeOutputScaleFactor();
 
@@ -198,6 +194,7 @@ export default class DailyVCSWebRenderer {
     }
 
     this.rootDisplaySizeChanged();
+    if (this.callbacks?.onStart) this.callbacks.onStart();
   }
 
   /**
@@ -207,10 +204,12 @@ export default class DailyVCSWebRenderer {
     if (!this.vcsApi) return;
 
     this.vcsApi.stop();
+    if (this.callbacks?.onStop) this.callbacks.onStop();
   }
 
   private onError(error: any) {
     console.error('VCS composition error: ', error);
+    if (this.callbacks?.onError) this.callbacks.onError(error);
   }
 
   private setActiveVideoInput(
@@ -256,6 +255,8 @@ export default class DailyVCSWebRenderer {
 
     // retain a copy of param values so we can reset renderer to the same state
     this.paramValues[paramId] = value;
+    if (this.callbacks?.onParamsChanged)
+      this.callbacks.onParamsChanged(this.paramValues);
   }
 
   /**
