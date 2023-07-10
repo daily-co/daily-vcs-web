@@ -2,7 +2,7 @@
   "name": "daily-vcs-web-renderer",
   "description": "A library to render Daily VCS view in the browser",
   "version": "0.0.1",
-  "license": "MIT",
+  "license": "BSD-2-Clause",
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
   "browser": "dist/index.umd.js",
