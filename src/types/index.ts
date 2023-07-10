@@ -61,6 +61,7 @@ export interface ViewportSize {
 }
 
 export interface Options {
+  fps?: number;
   viewportSize?: ViewportSize;
   defaultParams?: Record<string, string | number | boolean>;
   maxVideoInputSlots?: number;
