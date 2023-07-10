@@ -274,6 +274,40 @@ export default class DailyVCSWebRenderer {
   }
 
   /**
+   * updateImageSources updates the image sources of the VCS composition.
+   * @param images is a map of imageId to image URL.
+   */
+  async updateImageSources(images: Record<string, string> = {}) {
+    const promises = Object.entries(images).map(
+      ([name, image]) =>
+        new Promise((resolve, reject) => {
+          const img = new Image();
+
+          img.onload = () => resolve({ name, image });
+          img.onerror = () => {
+            console.error(`Image load failed, asset ${name}`);
+            reject(new Error(`Image load failed, asset ${name}`));
+          };
+          img.src = image;
+        })
+    );
+
+    try {
+      const results = await Promise.all(promises);
+      this.sources.assetImages = results.reduce(
+        (acc: Record<string, string>, item: any) => {
+          acc[item.name] = item.image;
+          return acc;
+        },
+        {}
+      );
+      this.sendUpdateImageSources();
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  /**
    * applyTracks applies the video tracks to the VCS composition.
    * @param videos is an array of video tracks.
    */
