@@ -1,3 +1,4 @@
+import { calculateViewportSize } from './lib/calculateViewportSize';
 import type {
   VCSComposition,
   VCSApi,
@@ -11,6 +12,7 @@ import type {
 } from './types';
 
 const MAX_VIDEO_INPUT_SLOTS = 20;
+const DEFAULT_ASPECT_RATIO = 16 / 9;
 
 /**
  * VCSWebRenderer
@@ -28,6 +30,7 @@ export default class DailyVCSWebRenderer {
   private rootEl!: HTMLElement;
   /**
    * viewportSize is the size of the DOM element that will be rendered.
+   * it will be neglected if the aspectRatio is set.
    */
   private viewportSize!: ViewportSize;
   private defaultParams!: Params;
@@ -74,6 +77,11 @@ export default class DailyVCSWebRenderer {
    */
   private maxVideoInputSlots: number = MAX_VIDEO_INPUT_SLOTS;
   private callbacks: VCSCallbacks = {};
+  /**
+   * aspectRatio is to automatically compute the viewportSize based on the rootEl size.
+   * It defaults to 16/9.
+   */
+  private aspectRatio: number = DEFAULT_ASPECT_RATIO;
 
   /**
    * constructor
@@ -84,6 +92,7 @@ export default class DailyVCSWebRenderer {
    * @param opts.getAssetUrlCb is a callback that will be called when the VCS composition needs to load an asset.
    * @param opts.maxVideoInputSlots is the maximum number of video input slots that can be rendered.
    * @param opts.fps is the framerate of the VCS composition.
+   * @param opts.aspectRatio is to automatically compute the viewportSize based on the rootEl size.
    */
   constructor(comp: VCSComposition, rootEl: HTMLElement, opts: Options) {
     if (!comp || typeof comp.startDOMOutputAsync !== 'function') {
@@ -91,19 +100,27 @@ export default class DailyVCSWebRenderer {
       return;
     }
     this.comp = comp;
-    this.getAssetUrlCb = opts.getAssetUrlCb ?? null;
+    this.getAssetUrlCb = opts?.getAssetUrlCb ?? null;
 
     this.rootEl = rootEl;
 
     // viewportSize is the render size used by VCS.
     // for video layers, this doesn't affect resolution, as they are rendered as actual DOM elements.
     // for graphics, this sets the size of the canvas element.
-    this.viewportSize = opts.viewportSize ?? { w: 1280, h: 720 };
+    this.viewportSize = opts?.viewportSize ?? { w: 1280, h: 720 };
 
-    this.defaultParams = opts.defaultParams ?? {};
+    if (opts?.aspectRatio) {
+      this.aspectRatio = opts.aspectRatio;
+      this.viewportSize = calculateViewportSize(rootEl, this.aspectRatio);
+    }
 
-    if (opts?.maxVideoInputSlots)
+    if (opts?.defaultParams) {
+      this.defaultParams = opts.defaultParams;
+    }
+
+    if (opts?.maxVideoInputSlots) {
       this.maxVideoInputSlots = opts.maxVideoInputSlots;
+    }
 
     if (opts?.fps) this.fps = opts.fps;
     if (opts?.callbacks) this.callbacks = opts.callbacks;

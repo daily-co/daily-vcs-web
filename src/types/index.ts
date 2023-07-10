@@ -69,6 +69,7 @@ export interface VCSCallbacks {
 }
 
 export interface Options {
+  aspectRatio?: number;
   fps?: number;
   viewportSize?: ViewportSize;
   defaultParams?: Params;
