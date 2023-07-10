@@ -1,1 +1,1 @@
-# daily-vcs-web-renderer
+# Daily VCS Web Renderer
