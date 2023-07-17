@@ -194,7 +194,7 @@ export default class DailyVCSWebRenderer {
     }
 
     this.rootDisplaySizeChanged();
-    if (this.callbacks?.onStart) this.callbacks.onStart();
+    this.callbacks.onStart?.();
   }
 
   /**
@@ -204,12 +204,12 @@ export default class DailyVCSWebRenderer {
     if (!this.vcsApi) return;
 
     this.vcsApi.stop();
-    if (this.callbacks?.onStop) this.callbacks.onStop();
+    this.callbacks.onStop?.();
   }
 
   private onError(error: any) {
     console.error('VCS composition error: ', error);
-    if (this.callbacks?.onError) this.callbacks.onError(error);
+    this.callbacks.onError?.(error);
   }
 
   private setActiveVideoInput(
@@ -255,8 +255,7 @@ export default class DailyVCSWebRenderer {
 
     // retain a copy of param values so we can reset renderer to the same state
     this.paramValues[paramId] = value;
-    if (this.callbacks?.onParamsChanged)
-      this.callbacks.onParamsChanged(this.paramValues);
+    this.callbacks.onParamsChanged?.(this.paramValues);
   }
 
   /**
