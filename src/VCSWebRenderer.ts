@@ -277,7 +277,10 @@ export default class DailyVCSWebRenderer {
    * updateImageSources updates the image sources of the VCS composition.
    * @param images is a map of imageId to image URL.
    */
-  async updateImageSources(images: Record<string, string> = {}) {
+  async updateImageSources(
+    images: Record<string, string> = {},
+    mergeType: 'merge' | 'replace' = 'replace'
+  ) {
     const promises = Object.entries(images).map(
       ([name, image]) =>
         new Promise((resolve, reject) => {
@@ -294,13 +297,27 @@ export default class DailyVCSWebRenderer {
 
     try {
       const results = await Promise.all(promises);
-      this.sources.assetImages = results.reduce(
+      const images = results.reduce(
         (acc: Record<string, string>, item: any) => {
           acc[item.name] = item.image;
           return acc;
         },
         {}
       );
+
+      if (mergeType === 'merge') {
+        this.sources.assetImages = {
+          ...this.sources.assetImages,
+          ...images,
+        };
+      } else if (mergeType === 'replace') {
+        this.sources.assetImages = images;
+      } else {
+        console.error(
+          'Invalid mergeType. Please use either "merge" or "replace".'
+        );
+        return;
+      }
       this.sendUpdateImageSources();
     } catch (error) {
       console.error(error);
