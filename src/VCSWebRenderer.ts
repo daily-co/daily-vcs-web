@@ -201,7 +201,7 @@ export default class DailyVCSWebRenderer {
   }
 
   /**
-   * to stop the VCS composition.
+   * stops the VCS composition.
    */
   stop() {
     if (!this.vcsApi) return;
