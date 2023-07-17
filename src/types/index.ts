@@ -1,4 +1,5 @@
 export type AssetType = 'font' | 'image';
+export type Params = Record<string, string | number | boolean>;
 
 export interface ActiveVideoSlot {
   displayName?: string;
@@ -60,10 +61,18 @@ export interface ViewportSize {
   h: number;
 }
 
+export interface VCSCallbacks {
+  onStart?(): void;
+  onStop?(): void;
+  onError?(error: any): void;
+  onParamsChanged?(params: Params): void;
+}
+
 export interface Options {
   fps?: number;
   viewportSize?: ViewportSize;
-  defaultParams?: Record<string, string | number | boolean>;
+  defaultParams?: Params;
   maxVideoInputSlots?: number;
   getAssetUrlCb: GetAssetUrlCb;
+  callbacks: VCSCallbacks;
 }
