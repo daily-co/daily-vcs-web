@@ -165,7 +165,7 @@ export default class DailyVCSWebRenderer {
   }
 
   /**
-   * start starts the VCS composition.
+   * starts the VCS composition.
    * It should be called after the DOM element has been rendered.
    */
   async start() {
