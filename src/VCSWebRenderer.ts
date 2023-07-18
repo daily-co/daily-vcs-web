@@ -527,7 +527,7 @@ export default class DailyVCSWebRenderer {
   updateParticipantIds(participantIds: string[], mergeType: Merge = 'replace') {
     this.participantIds =
       mergeType === 'merge'
-        ? [...this.participantIds, ...participantIds]
+        ? [...new Set([...this.participantIds, ...participantIds])]
         : participantIds;
     this.handleParticipantsChange();
   }
