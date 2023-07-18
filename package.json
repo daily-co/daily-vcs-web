@@ -21,7 +21,9 @@
     "size": "size-limit",
     "analyze": "size-limit --why"
   },
-  "peerDependencies": {},
+  "peerDependencies": {
+    "@daily-co/daily-js": ">=0.45.0 <1"
+  },
   "prettier": {
     "printWidth": 80,
     "semi": true,

@@ -1,4 +1,5 @@
 import { calculateViewportSize } from './lib/calculateViewportSize';
+import { isTrackOff } from './lib/isTrackOff';
 import type {
   VCSComposition,
   VCSApi,
@@ -9,7 +10,10 @@ import type {
   Options,
   VCSCallbacks,
   Params,
+  Merge,
 } from './types';
+
+import { DailyCall } from '@daily-co/daily-js';
 
 const MAX_VIDEO_INPUT_SLOTS = 20;
 const DEFAULT_ASPECT_RATIO = 16 / 9;
@@ -19,6 +23,11 @@ const DEFAULT_ASPECT_RATIO = 16 / 9;
  * It's a wrapper around the VCSComposition to render the DOM element.
  */
 export default class DailyVCSWebRenderer {
+  /**
+   * callObject is the Daily callObject.
+   * for more info, see https://docs.daily.co/reference/rn-daily-js/factory-methods/create-call-object#main
+   */
+  private callObject!: DailyCall;
   /**
    * comp is the VCS composition.
    * for more info, see https://docs.daily.co/reference/vcs/core-concepts/composition
@@ -83,18 +92,35 @@ export default class DailyVCSWebRenderer {
    */
   private aspectRatio: number = DEFAULT_ASPECT_RATIO;
 
+  private participantIds: string[] = [];
+
   /**
    * constructor
+   * @param callObject is the Daily callObject.
    * @param comp is the VCS composition.
    * @param rootEl is the DOM element where the VCS composition will be rendered.
+   * @param opts is the options object.
+   * @param opts.callObject is the Daily callObject.
+   * @param opts.callbacks is a map of callbacks.
    * @param opts.viewportSize is the size of the DOM element that will be rendered.
    * @param opts.defaultParams is a map of paramId to default value.
    * @param opts.getAssetUrlCb is a callback that will be called when the VCS composition needs to load an asset.
    * @param opts.maxVideoInputSlots is the maximum number of video input slots that can be rendered.
    * @param opts.fps is the framerate of the VCS composition.
    * @param opts.aspectRatio is to automatically compute the viewportSize based on the rootEl size.
+   * @param opts.participantIds is an array of participantIds to render.
    */
-  constructor(comp: VCSComposition, rootEl: HTMLElement, opts: Options) {
+  constructor(
+    callObject: DailyCall,
+    comp: VCSComposition,
+    rootEl: HTMLElement,
+    opts: Options
+  ) {
+    if (!callObject) {
+      console.error('VCSMeetingRenderer constructor needs a Daily callObject');
+    }
+    this.callObject = callObject;
+
     if (!comp || typeof comp.startDOMOutputAsync !== 'function') {
       console.error('VCSMeetingRenderer constructor needs a VCS composition');
       return;
@@ -124,6 +150,10 @@ export default class DailyVCSWebRenderer {
 
     if (opts?.fps) this.fps = opts.fps;
     if (opts?.callbacks) this.callbacks = opts.callbacks;
+
+    if (opts?.participantIds && opts?.participantIds.length > 0) {
+      this.participantIds = opts.participantIds;
+    }
 
     this.recomputeOutputScaleFactor();
 
@@ -177,6 +207,55 @@ export default class DailyVCSWebRenderer {
     this.rootEl.appendChild(el);
   }
 
+  private handleParticipantsChange() {
+    const participants = Object.values(this.callObject.participants());
+    const videos = participants
+      .filter((p) =>
+        this.participantIds.length > 0
+          ? this.participantIds.includes(p.session_id) &&
+            !isTrackOff(p?.tracks.video.state)
+          : !isTrackOff(p?.tracks.video.state)
+      )
+      .map((p) => ({
+        active: true,
+        id: p.session_id,
+        sessionId: p.session_id,
+        displayName: p.user_name || 'Guest',
+        track: p.tracks.video.persistentTrack,
+        type: 'camera' as const,
+      }));
+
+    const screens = participants
+      .filter((p) =>
+        this.participantIds.length > 0
+          ? this.participantIds.includes(p.session_id) &&
+            !isTrackOff(p?.tracks.screenVideo.state)
+          : !isTrackOff(p?.tracks.screenVideo.state)
+      )
+      .map((p) => ({
+        active: true,
+        id: p.session_id,
+        sessionId: p.session_id,
+        displayName: '',
+        track: p.tracks.screenVideo.persistentTrack,
+        type: 'screenshare' as const,
+      }));
+
+    this.applyTracks([...videos, ...screens]);
+  }
+
+  private setupEventListeners() {
+    this.callObject.on('participant-joined', this.handleParticipantsChange);
+    this.callObject.on('participant-updated', this.handleParticipantsChange);
+    this.callObject.on('participant-left', this.handleParticipantsChange);
+  }
+
+  private removeEventListeners() {
+    this.callObject.off('participant-joined', this.handleParticipantsChange);
+    this.callObject.off('participant-updated', this.handleParticipantsChange);
+    this.callObject.off('participant-left', this.handleParticipantsChange);
+  }
+
   /**
    * starts the VCS composition.
    * It should be called after the DOM element has been rendered.
@@ -202,6 +281,9 @@ export default class DailyVCSWebRenderer {
       }
     );
 
+    this.handleParticipantsChange();
+    this.setupEventListeners();
+
     this.sendActiveVideoInputSlots();
 
     if (this.defaultParams) {
@@ -220,6 +302,7 @@ export default class DailyVCSWebRenderer {
   stop() {
     if (!this.vcsApi) return;
 
+    this.removeEventListeners();
     this.vcsApi.stop();
     this.callbacks.onStop?.();
   }
@@ -248,7 +331,7 @@ export default class DailyVCSWebRenderer {
   private sendActiveVideoInputSlots() {
     if (!this.vcsApi) return;
 
-    const arr = [];
+    const arr: (boolean | ActiveVideoSlot)[] = [];
     for (const activeVideoInput of this.activeVideoInputSlots) {
       if (typeof activeVideoInput === 'object') {
         arr.push(activeVideoInput);
@@ -293,6 +376,7 @@ export default class DailyVCSWebRenderer {
   /**
    * updateImageSources updates the image sources of the VCS composition.
    * @param images is a map of imageId to image URL.
+   * @param mergeType determines how the new image sources will be merged with the existing image sources.
    */
   async updateImageSources(
     images: Record<string, string> = {},
@@ -345,50 +429,94 @@ export default class DailyVCSWebRenderer {
    * applyTracks applies the video tracks to the VCS composition.
    * @param videos is an array of video tracks.
    */
-  applyTracks(videos: VideoInputSlot[]) {
+  private applyTracks(videos: VideoInputSlot[]) {
     if (!this.sources || !videos) return;
 
+    const prevSlots = this.sources.videoSlots;
     const newSlots: VideoInputSlot[] = [];
 
     for (const video of videos) {
       if (!video?.track) continue;
+      const prevSlot = prevSlots.find((it) => it.id === video.id);
+      if (prevSlot && prevSlot?.track?.id === video.track.id) {
+        newSlots.push({ ...prevSlot, displayName: video.displayName });
+      } else {
+        const mediaStream = new MediaStream([video.track]);
+        let videoEl;
+        if (prevSlot?.element) {
+          videoEl = prevSlot.element;
+        } else {
+          videoEl = document.createElement('video');
+          this.placeVideoSourceInDOM(videoEl, video.track.id);
+        }
+        videoEl.srcObject = mediaStream;
+        videoEl.setAttribute('autoplay', 'true');
+        videoEl.setAttribute('playsinline', 'true');
+        videoEl.setAttribute('controls', 'false');
 
-      const prevSlot = this.sources.videoSlots.find((it) => it.id === video.id);
-      const videoEl = prevSlot?.element ?? document.createElement('video');
-      this.placeVideoSourceInDOM(videoEl, video.track.id);
-      newSlots.push({
-        active: true,
-        id: `videotrack_${video.track.id}`,
-        element: videoEl,
-        track: video.track,
-        sessionId: video.sessionId,
-        displayName: video.displayName,
-        type: video.type,
-      });
-    }
-
-    const prevSlots = this.sources.videoSlots;
-    for (const ps of prevSlots) {
-      if (!newSlots.some((ns) => ns.id === ps.id)) {
-        ps.element?.remove();
+        newSlots.push({
+          active: true,
+          id: `videotrack_${video.track.id}`,
+          element: videoEl,
+          track: video.track,
+          sessionId: video.sessionId,
+          displayName: video.displayName,
+          type: video.type,
+        });
       }
     }
 
-    this.sources.videoSlots = newSlots;
-    this.sendUpdateImageSources();
+    prevSlots
+      .filter((ps) => newSlots.every((ns) => ns.id !== ps.id))
+      .forEach((ps) => {
+        this.rootEl
+          .querySelector(`[data-video-remote-track-id="${ps?.track?.id}"]`)
+          ?.remove();
+      });
 
-    for (let i = 0; i < this.maxVideoInputSlots; i++) {
-      const slot = newSlots[i];
-      this.setActiveVideoInput(
-        i,
-        slot?.id !== undefined,
-        slot?.id,
-        slot?.displayName,
-        slot?.type === 'screenshare'
-      );
+    let didChange = newSlots.length !== prevSlots.length;
+    if (!didChange) {
+      for (let i = 0; i < newSlots.length; i++) {
+        if (newSlots[i].id !== prevSlots[i].id) {
+          didChange = true;
+          break;
+        }
+      }
     }
-    this.sendActiveVideoInputSlots();
 
-    this.rootDisplaySizeChanged();
+    if (didChange) {
+      this.sources.videoSlots = newSlots;
+      this.sendUpdateImageSources();
+
+      for (let i = 0; i < MAX_VIDEO_INPUT_SLOTS; i++) {
+        const slot = newSlots[i];
+        if (slot) {
+          this.setActiveVideoInput(
+            i,
+            true,
+            slot.id,
+            slot.displayName,
+            slot.type === 'screenshare'
+          );
+        } else {
+          this.setActiveVideoInput(i, false);
+        }
+      }
+      this.sendActiveVideoInputSlots();
+      this.rootDisplaySizeChanged();
+    }
+  }
+
+  /**
+   * updateParticipantIds updates the participantIds to render.
+   * @param participantIds is an array of participantIds to render. If it's empty, all participants will be rendered.
+   * @param mergeType determines how the new participantIds will be merged with the existing participantIds.
+   */
+  updateParticipantIds(participantIds: string[], mergeType: Merge = 'replace') {
+    this.participantIds =
+      mergeType === 'merge'
+        ? [...new Set([...this.participantIds, ...participantIds])]
+        : participantIds;
+    this.handleParticipantsChange();
   }
 }

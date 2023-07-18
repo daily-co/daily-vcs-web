@@ -75,5 +75,8 @@ export interface Options {
   defaultParams?: Params;
   maxVideoInputSlots?: number;
   getAssetUrlCb: GetAssetUrlCb;
-  callbacks: VCSCallbacks;
+  callbacks?: VCSCallbacks;
+  participantIds?: string[];
 }
+
+export type Merge = 'replace' | 'merge';
