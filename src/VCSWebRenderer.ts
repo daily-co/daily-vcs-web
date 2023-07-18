@@ -13,6 +13,8 @@ import type {
   Merge,
 } from './types';
 
+import { DailyCall } from '@daily-co/daily-js';
+
 const MAX_VIDEO_INPUT_SLOTS = 20;
 const DEFAULT_ASPECT_RATIO = 16 / 9;
 
@@ -25,7 +27,7 @@ export default class DailyVCSWebRenderer {
    * callObject is the Daily callObject.
    * for more info, see https://docs.daily.co/reference/rn-daily-js/factory-methods/create-call-object#main
    */
-  private callObject!: any;
+  private callObject!: DailyCall;
   /**
    * comp is the VCS composition.
    * for more info, see https://docs.daily.co/reference/vcs/core-concepts/composition
@@ -109,12 +111,12 @@ export default class DailyVCSWebRenderer {
    * @param opts.participantIds is an array of participantIds to render.
    */
   constructor(
-    callObject: any,
+    callObject: DailyCall,
     comp: VCSComposition,
     rootEl: HTMLElement,
     opts: Options
   ) {
-    if (!callObject || typeof callObject.participants !== 'function') {
+    if (!callObject) {
       console.error('VCSMeetingRenderer constructor needs a Daily callObject');
     }
     this.callObject = callObject;
@@ -208,13 +210,13 @@ export default class DailyVCSWebRenderer {
   private handleParticipantsChange() {
     const participants = Object.values(this.callObject.participants());
     const videos = participants
-      .filter((p: any) =>
+      .filter((p) =>
         this.participantIds.length > 0
           ? this.participantIds.includes(p.session_id) &&
             !isTrackOff(p?.tracks.video.state)
           : !isTrackOff(p?.tracks.video.state)
       )
-      .map((p: any) => ({
+      .map((p) => ({
         active: true,
         id: p.session_id,
         sessionId: p.session_id,
@@ -224,13 +226,13 @@ export default class DailyVCSWebRenderer {
       }));
 
     const screens = participants
-      .filter((p: any) =>
+      .filter((p) =>
         this.participantIds.length > 0
           ? this.participantIds.includes(p.session_id) &&
             !isTrackOff(p?.tracks.screenVideo.state)
           : !isTrackOff(p?.tracks.screenVideo.state)
       )
-      .map((p: any) => ({
+      .map((p) => ({
         active: true,
         id: p.session_id,
         sessionId: p.session_id,
