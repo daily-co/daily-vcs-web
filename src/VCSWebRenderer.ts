@@ -93,6 +93,7 @@ export default class DailyVCSWebRenderer {
   private aspectRatio: number = DEFAULT_ASPECT_RATIO;
 
   private participantIds: string[] = [];
+  private resizeObserver!: ResizeObserver | null;
 
   /**
    * constructor
@@ -162,6 +163,23 @@ export default class DailyVCSWebRenderer {
     }
   }
 
+  private startResizeObserver() {
+    this.resizeObserver = new ResizeObserver((entries) => {
+      if (entries && entries.length > 0) {
+        this.rootDisplaySizeChanged();
+      }
+    });
+
+    this.resizeObserver.observe(this.rootEl);
+  }
+
+  private stopResizeObserver() {
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
+    }
+  }
+
   private recomputeOutputScaleFactor() {
     const displayW = this.rootEl.clientWidth;
     const displayH = this.rootEl.clientHeight;
@@ -183,7 +201,7 @@ export default class DailyVCSWebRenderer {
    * It will recompute the scale factor and update the VCS composition.
    * This is needed to render the VCS composition at the correct size.
    */
-  rootDisplaySizeChanged() {
+  private rootDisplaySizeChanged() {
     this.recomputeOutputScaleFactor();
 
     if (this.vcsApi) {
@@ -294,6 +312,7 @@ export default class DailyVCSWebRenderer {
 
     this.rootDisplaySizeChanged();
     this.callbacks.onStart?.();
+    this.startResizeObserver();
   }
 
   /**
@@ -305,6 +324,7 @@ export default class DailyVCSWebRenderer {
     this.removeEventListeners();
     this.vcsApi.stop();
     this.callbacks.onStop?.();
+    this.stopResizeObserver();
   }
 
   private onError(error: any) {
