@@ -1,3 +1,5 @@
+import { type } from 'os';
+
 export type AssetType = 'font' | 'image';
 export type Params = Record<string, string | number | boolean>;
 
@@ -75,5 +77,16 @@ export interface Options {
   defaultParams?: Params;
   maxVideoInputSlots?: number;
   getAssetUrlCb: GetAssetUrlCb;
-  callbacks: VCSCallbacks;
+  callbacks?: VCSCallbacks;
+  participantIds?: string[];
 }
+
+export type DailyTrackState =
+  | 'off'
+  | 'blocked'
+  | 'sendable'
+  | 'loading'
+  | 'playable'
+  | 'interrupted';
+
+export type Merge = 'replace' | 'merge';
