@@ -32,23 +32,23 @@ export default class DailyVCSWebRenderer {
    * comp is the VCS composition.
    * for more info, see https://docs.daily.co/reference/vcs/core-concepts/composition
    */
-  private comp!: VCSComposition;
+  private readonly comp!: VCSComposition;
   /**
    * rootEl is the DOM element where the VCS composition will be rendered.
    */
-  private rootEl!: HTMLElement;
+  private readonly rootEl!: HTMLElement;
   /**
    * viewportSize is the size of the DOM element that will be rendered.
    * it will be neglected if the aspectRatio is set.
    */
-  private viewportSize!: ViewportSize;
-  private defaultParams!: Params;
-  private getAssetUrlCb!: GetAssetUrlCb;
+  private readonly viewportSize!: ViewportSize;
+  private readonly defaultParams!: Params;
+  private readonly getAssetUrlCb!: GetAssetUrlCb;
   /**
    * fps is the framerate of the VCS composition.
    * It defaults to 30.
    */
-  private fps = 30;
+  private readonly fps: number = 30;
   /**
    * paramValues is a map of paramId to value.
    * It's used to keep track of the current state of the VCS composition.
@@ -84,13 +84,13 @@ export default class DailyVCSWebRenderer {
    * maxVideoInputSlots is the maximum number of video input slots that can be rendered.
    * It defaults to 20.
    */
-  private maxVideoInputSlots: number = MAX_VIDEO_INPUT_SLOTS;
+  private readonly maxVideoInputSlots: number = MAX_VIDEO_INPUT_SLOTS;
   private callbacks: VCSCallbacks = {};
   /**
    * aspectRatio is to automatically compute the viewportSize based on the rootEl size.
    * It defaults to 16/9.
    */
-  private aspectRatio: number = DEFAULT_ASPECT_RATIO;
+  private readonly aspectRatio: number = DEFAULT_ASPECT_RATIO;
 
   private participantIds: string[] = [];
   private resizeObserver!: ResizeObserver | null;
@@ -178,6 +178,52 @@ export default class DailyVCSWebRenderer {
       this.resizeObserver.disconnect();
       this.resizeObserver = null;
     }
+  }
+
+  /**
+   * rootElement is the DOM element where the VCS composition will be rendered.
+   */
+  get rootElement(): HTMLElement {
+    return this.rootEl;
+  }
+
+  /**
+   * vcsApiInstance is the instance returned by the VCSComposition.
+   * It's used to send updates to the VCS composition.
+   */
+  get vcsApiInstance(): VCSApi | null {
+    return this.vcsApi;
+  }
+
+  /**
+   * comp is the VCS composition.
+   * for more info, see https://docs.daily.co/reference/vcs/core-concepts/composition
+   */
+  get composition(): VCSComposition {
+    return this.comp;
+  }
+
+  /**
+   * participants is an array of participantIds to render.
+   * if empty, all participants will be rendered.
+   */
+  get participants(): string[] {
+    return this.participantIds;
+  }
+
+  /**
+   * params is a map of paramId to value.
+   * It's used to keep track of the current state of the VCS composition.
+   */
+  get params(): Params {
+    return this.paramValues;
+  }
+
+  /**
+   * size is the render viewport size used by VCS.
+   */
+  get size(): ViewportSize {
+    return this.viewportSize;
   }
 
   private recomputeOutputScaleFactor() {
