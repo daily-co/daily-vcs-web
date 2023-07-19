@@ -181,6 +181,21 @@ export default class DailyVCSWebRenderer {
   }
 
   /**
+   * rootElement is the DOM element where the VCS composition will be rendered.
+   */
+  get rootElement(): HTMLElement {
+    return this.rootEl;
+  }
+
+  /**
+   * vcsApiInstance is the instance returned by the VCSComposition.
+   * It's used to send updates to the VCS composition.
+   */
+  get vcsApiInstance(): VCSApi | null {
+    return this.vcsApi;
+  }
+
+  /**
    * comp is the VCS composition.
    * for more info, see https://docs.daily.co/reference/vcs/core-concepts/composition
    */
