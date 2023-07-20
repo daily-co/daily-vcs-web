@@ -277,15 +277,15 @@ export default class DailyVCSWebRenderer {
       .filter((p) =>
         this.participantIds.length > 0
           ? this.participantIds.includes(p.session_id) &&
-            !isTrackOff(p?.tracks.video.state)
-          : !isTrackOff(p?.tracks.video.state)
+            !isTrackOff(p?.tracks?.video?.state)
+          : !isTrackOff(p?.tracks?.video?.state)
       )
       .map((p) => ({
         active: true,
         id: p.session_id,
         sessionId: p.session_id,
         displayName: p.user_name || 'Guest',
-        track: p.tracks.video.persistentTrack,
+        track: p?.tracks?.video?.persistentTrack,
         type: 'camera' as const,
       }));
 
@@ -293,15 +293,15 @@ export default class DailyVCSWebRenderer {
       .filter((p) =>
         this.participantIds.length > 0
           ? this.participantIds.includes(p.session_id) &&
-            !isTrackOff(p?.tracks.screenVideo.state)
-          : !isTrackOff(p?.tracks.screenVideo.state)
+            !isTrackOff(p?.tracks?.screenVideo?.state)
+          : !isTrackOff(p?.tracks?.screenVideo?.state)
       )
       .map((p) => ({
         active: true,
         id: p.session_id,
         sessionId: p.session_id,
         displayName: '',
-        track: p.tracks.screenVideo.persistentTrack,
+        track: p?.tracks?.screenVideo?.persistentTrack,
         type: 'screenshare' as const,
       }));
 
