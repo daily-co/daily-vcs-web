@@ -33,6 +33,23 @@ class MediaStreamMock {
 
 (global as any).MediaStream = MediaStreamMock;
 
+class ImageMock {
+  onload: (() => void) | null = null;
+  onerror: (() => void) | null = null;
+  src: string = '';
+
+  constructor() {
+    setTimeout(() => {
+      // Simulate image loaded successfully after a short delay
+      if (this.onload) {
+        this.onload();
+      }
+    }, 10);
+  }
+}
+
+(global as any).Image = ImageMock;
+
 describe('VCSWebRenderer', () => {
   let callObject: DailyCall;
   let comp: VCSComposition;
@@ -183,6 +200,52 @@ describe('VCSWebRenderer', () => {
     expect(
       renderer.vcsApiInstance!.setActiveVideoInputSlots
     ).toHaveBeenCalled();
+  });
+
+  test('should update the image sources with mergeType "merge"', () => {
+    const images = {
+      'images/overlay.png':
+        'https://www.daily.co/tools/vcs-simulator/composition-assets/images/overlay.png',
+      'images/user_white_64.png':
+        'https://www.daily.co/tools/vcs-simulator/composition-assets/images/user_white_64.png',
+    };
+    const mergeType = 'merge';
+
+    renderer.updateImageSources(images, mergeType).then(() => {
+      expect(renderer['sources'].assetImages).toEqual(images);
+    });
+  });
+
+  test('should update the image sources with mergeType "replace"', async () => {
+    const images = {
+      'images/overlay.png':
+        'https://www.daily.co/tools/vcs-simulator/composition-assets/images/overlay.png',
+      'images/user_white_64.png':
+        'https://www.daily.co/tools/vcs-simulator/composition-assets/images/user_white_64.png',
+    };
+    const mergeType = 'replace';
+
+    renderer.updateImageSources(images, mergeType).then(() => {
+      expect(renderer['sources'].assetImages).toEqual(images);
+    });
+  });
+
+  test('should log an error for invalid mergeType', async () => {
+    const images = {
+      'images/overlay.png':
+        'https://www.daily.co/tools/vcs-simulator/composition-assets/images/overlay.png',
+      'images/user_white_64.png':
+        'https://www.daily.co/tools/vcs-simulator/composition-assets/images/user_white_64.png',
+    };
+    const mergeType = 'invalidMergeType';
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+
+    renderer.updateImageSources(images, mergeType as any).then(() => {
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Invalid mergeType. Please use either "merge" or "replace".'
+      );
+      expect(renderer['sources'].assetImages).toEqual({});
+    });
   });
 
   test('updateParticipantIds() should update the participantIds', () => {
