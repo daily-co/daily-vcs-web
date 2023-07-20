@@ -1,5 +1,11 @@
 import DailyIframe, { DailyCall } from '@daily-co/daily-js';
-import { DailyVCSWebRenderer, VCSComposition, Options, VCSApi } from '../src';
+import {
+  DailyVCSWebRenderer,
+  VCSComposition,
+  Options,
+  VCSApi,
+  VideoInputSlot,
+} from '../src';
 
 const mockVCSApi: VCSApi = {
   setActiveVideoInputSlots: jest.fn(),
@@ -17,7 +23,17 @@ class ResizeObserverMock {
 
 (global as any).ResizeObserver = ResizeObserverMock;
 
-describe('DailyVCSWebRenderer', () => {
+class MediaStreamMock {
+  constructor() {}
+
+  getTracks() {
+    return [];
+  }
+}
+
+(global as any).MediaStream = MediaStreamMock;
+
+describe('VCSWebRenderer', () => {
   let callObject: DailyCall;
   let comp: VCSComposition;
   let roolEl: HTMLElement;
@@ -100,6 +116,72 @@ describe('DailyVCSWebRenderer', () => {
       'paramId3',
       'paramValue3'
     );
+  });
+
+  test('applyTracks should handle videoSlots update correctly', async () => {
+    await renderer.start();
+
+    const videoInputSlots: VideoInputSlot[] = [
+      {
+        active: true,
+        id: 'slot1',
+        track: { id: 'track1' } as MediaStreamTrack,
+        sessionId: 'session1',
+        displayName: 'User1',
+        type: 'camera',
+      },
+      {
+        active: true,
+        id: 'slot2',
+        track: { id: 'track2' } as MediaStreamTrack,
+        sessionId: 'session2',
+        displayName: 'User2',
+        type: 'camera',
+      },
+    ];
+
+    renderer['sources'] = {
+      assetImages: { ...renderer['sources'].assetImages },
+      videoSlots: [
+        {
+          active: true,
+          id: 'slot1',
+          element: document.createElement('video'),
+          track: { id: 'track1' } as MediaStreamTrack,
+          sessionId: 'session1',
+          displayName: 'User1',
+          type: 'camera',
+        },
+      ],
+    };
+
+    renderer['applyTracks'](videoInputSlots);
+
+    expect(renderer['sources'].videoSlots).toEqual([
+      {
+        active: true,
+        id: 'slot1',
+        element: expect.any(HTMLVideoElement),
+        track: { id: 'track1' },
+        sessionId: 'session1',
+        displayName: 'User1',
+        type: 'camera',
+      },
+      {
+        active: true,
+        id: 'videotrack_track2',
+        element: expect.any(HTMLVideoElement),
+        track: { id: 'track2' },
+        sessionId: 'session2',
+        displayName: 'User2',
+        type: 'camera',
+      },
+    ]);
+
+    expect(renderer.vcsApiInstance!.updateImageSources).toHaveBeenCalled();
+    expect(
+      renderer.vcsApiInstance!.setActiveVideoInputSlots
+    ).toHaveBeenCalled();
   });
 
   test('updateParticipantIds() should update the participantIds', () => {
