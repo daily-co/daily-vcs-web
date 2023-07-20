@@ -53,6 +53,7 @@ describe('VCSWebRenderer', () => {
   });
 
   afterEach(() => {
+    renderer.stop();
     jest.restoreAllMocks();
   });
 
@@ -189,5 +190,21 @@ describe('VCSWebRenderer', () => {
 
     // Assert that the participantIds are updated
     expect(renderer.participants).toEqual(['participant1', 'participant2']);
+  });
+
+  test('resizeObserver should call rootDisplaySizeChanged when the size of the rootEl changes', () => {
+    const resizeObserverMock = jest.fn();
+    (global as any).ResizeObserver = jest.fn((callback) => {
+      resizeObserverMock.mockImplementation(callback);
+      return {
+        observe: () => {},
+        disconnect: () => {},
+      };
+    });
+
+    renderer.start();
+
+    resizeObserverMock({});
+    expect(resizeObserverMock).toHaveBeenCalled();
   });
 });
