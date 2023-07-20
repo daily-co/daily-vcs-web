@@ -62,11 +62,19 @@ describe('VCSWebRenderer', () => {
       startDOMOutputAsync: jest.fn(async () => mockVCSApi),
     };
     roolEl = document.createElement('div');
-    const optsMock: Options = {
+    const options: Options = {
+      aspectRatio: 16 / 9,
+      defaultParams: { paramId1: 'paramValue1' },
       getAssetUrlCb: jest.fn(),
+      callbacks: {
+        onStart: jest.fn(),
+        onStop: jest.fn(),
+        onError: jest.fn(),
+        onParamsChanged: jest.fn(),
+      },
     };
 
-    renderer = new DailyVCSWebRenderer(callObject, comp, roolEl, optsMock);
+    renderer = new DailyVCSWebRenderer(callObject, comp, roolEl, options);
   });
 
   afterEach(() => {
@@ -76,6 +84,10 @@ describe('VCSWebRenderer', () => {
 
   test('Constructor should initialize the DailyVCSWebRenderer instance correctly', () => {
     expect(renderer.rootElement).toBe(roolEl);
+    expect(renderer['defaultParams']).toStrictEqual({
+      paramId1: 'paramValue1',
+    });
+    expect(renderer['aspectRatio']).toBe(16 / 9);
     expect(renderer.vcsApiInstance).toBeUndefined();
   });
 
@@ -92,7 +104,6 @@ describe('VCSWebRenderer', () => {
       expect.any(Object),
       expect.any(Object)
     );
-
     expect(renderer.vcsApiInstance).toBeDefined();
   });
 
@@ -134,6 +145,39 @@ describe('VCSWebRenderer', () => {
       'paramId3',
       'paramValue3'
     );
+  });
+
+  test('onStart callback should be triggered when the renderer is started', async () => {
+    const onStartCallback = renderer['callbacks'].onStart;
+    await renderer.start();
+    expect(onStartCallback).toHaveBeenCalled();
+  });
+
+  test('onStop callback should be triggered when the renderer is stopped', async () => {
+    const onStopCallback = renderer['callbacks'].onStop;
+    await renderer.start();
+    renderer.stop();
+    expect(onStopCallback).toHaveBeenCalled();
+  });
+
+  test('onError callback should be triggered when there is an error in the VCS composition', () => {
+    const consoleErrorMock = jest.spyOn(console, 'error').mockImplementation();
+
+    const onErrorSpy = jest.spyOn(renderer['callbacks'], 'onError');
+    const testError = new Error('Test Error');
+    renderer['onError'](testError);
+
+    expect(onErrorSpy).toHaveBeenCalledWith(testError);
+    consoleErrorMock.mockRestore();
+  });
+
+  test('onParamsChanged callback should be triggered when the params are updated', async () => {
+    const onParamsChangedCallback = renderer['callbacks'].onParamsChanged;
+    await renderer.start();
+    renderer.sendParam('paramId1', 'newParamValue');
+    expect(onParamsChangedCallback).toHaveBeenCalledWith({
+      paramId1: 'newParamValue',
+    });
   });
 
   test('applyTracks should handle videoSlots update correctly', async () => {
