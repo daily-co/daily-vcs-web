@@ -10,6 +10,7 @@ Install the package via npm or yarn:
 npm install @daily-co/daily-vcs-web
 # or
 yarn add @daily-co/daily-vcs-web
+```
 
 ### Usage
 
