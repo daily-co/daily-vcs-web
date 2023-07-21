@@ -1,6 +1,6 @@
 # Daily VCS Web
 
-The @daily-co/daily-vcs-web package is a library that provides a wrapper around the VCSComposition to render a DOM element
+The `@daily-co/daily-vcs-web` package enables developers to render a `VCSComposition` inside a given DOM element in the browser.
 
 ### Installation
 
