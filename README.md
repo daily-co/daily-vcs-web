@@ -6,7 +6,7 @@ The `@daily-co/daily-vcs-web` package enables developers to render a `VCSComposi
 
 Install the package via npm or yarn:
 
-```bash
+````bash
 npm install @daily-co/daily-vcs-web
 # or
 yarn add @daily-co/daily-vcs-web
@@ -24,17 +24,11 @@ const callObject = DailyIframe.createCallObject();
 const rootEl = document.getElementById('vcs-wrapper'); // DOM element where the VCS composition will be rendered
 const opts = {
   callObject: callObject,
-  viewportSize: { w: 1280, h: 720 }, // Optional: size of the DOM element that will be rendered
-  defaultParams: {}, // Optional: map of paramId to default value
-  getAssetUrlCb: null, // Optional: callback for loading assets by the VCS composition
-  maxVideoInputSlots: 20, // Optional: maximum number of video input slots that can be rendered
-  fps: 30, // Optional: framerate of the VCS composition (default is 30)
-  aspectRatio: 16 / 9, // Optional: automatically compute the viewportSize based on the rootEl size (default is 16/9)
-  participantIds: [], // Optional: array of participantIds to render
+  viewportSize: { w: 1280, h: 720 },
 };
 
 const renderer = new DailyVCSWebRenderer(callObject, DailyVCSBaselineComposition, rootEl, opts);
-```
+````
 
 ### Methods
 
@@ -107,12 +101,14 @@ renderer.updateParticipantIds(
 
 The DailyVCSWebRenderer class also provides several read-only properties:
 
-- rootElement: The DOM element where the VCS composition is rendered.
-- vcsApiInstance: The VCSApi instance returned by the VCSComposition. It can be used to send updates to the VCS composition.
-- composition: The VCS composition object.
-- participants: An array of participantIds to render.
-- params: A map of paramId to value. It keeps track of the current state of the VCS composition.
-- size: The render viewport size used by VCS.
+| Name             | Type                       | Description                                                                                                |
+| ---------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `rootElement`    | `DOMElement`               | The DOM element where the VCS composition is rendered                                                      |
+| `vcsApiInstance` | `VCSApi`                   | The VCSApi instance returned by the VCSComposition. It can be used to send updates to the VCS composition. |
+| `composition`    | `VCSComposition`           | The VCS composition object.                                                                                |
+| `participants`   | `string[]`                 | An array of participantIds to render.                                                                      |
+| `params`         | `Param[]`                  | A map of paramId to value. It keeps track of the current state of the VCS composition.                     |
+| `size`           | `{ w: number, h: number }` | The render viewport size used by VCS.                                                                      |
 
 ### Callbacks
 
