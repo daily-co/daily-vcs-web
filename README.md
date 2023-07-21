@@ -42,7 +42,7 @@ The DailyVCSWebRenderer class provides the following methods:
 
 - `start()`
 
-Starts the VCS composition and renders it on the specified DOM element.
+Starts the VCS composition and renders it to the specified DOM element.
 
 ```
 renderer.start();
