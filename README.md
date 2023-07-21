@@ -13,15 +13,15 @@ yarn add @daily-co/daily-vcs-web
 
 ### Usage
 
-To use the DailyVCSWebRenderer class, you need to import it and create an instance by providing the necessary parameters.
+Import the `DailyVCSWebRender` class from `@daily-co/daily-vcs-web` and create an instance to get started:
 
-```
+```js
+import DailyIframe from '@daily-co/daily-js';
+import DailyVCSBaselineComposition from '@daily-co/vcs-composition-daily-baseline-web';
 import DailyVCSWebRenderer from '@daily-co/daily-vcs-web';
 
-// Example code to create the renderer instance
-const callObject = ...; // Daily callObject - see https://docs.daily.co/reference/rn-daily-js/factory-methods/create-call-object#main
-const comp = ...; // VCSComposition - see https://docs.daily.co/reference/vcs/core-concepts/composition
-const rootEl = ...; // DOM element where the VCS composition will be rendered
+const callObject = DailyIframe.createCallObject();
+const rootEl = document.getElementById('vcs-wrapper'); // DOM element where the VCS composition will be rendered
 const opts = {
   callObject: callObject,
   viewportSize: { w: 1280, h: 720 }, // Optional: size of the DOM element that will be rendered
@@ -33,7 +33,7 @@ const opts = {
   participantIds: [], // Optional: array of participantIds to render
 };
 
-const renderer = new DailyVCSWebRenderer(callObject, comp, rootEl, opts);
+const renderer = new DailyVCSWebRenderer(callObject, DailyVCSBaselineComposition, rootEl, opts);
 ```
 
 ### Methods
