@@ -4,15 +4,12 @@ The `@daily-co/daily-vcs-web` package enables developers to render a `VCSComposi
 
 ### Installation
 
-You can install the package via npm or yarn:
+Install the package via npm or yarn:
 
-```
+```bash
 npm install @daily-co/daily-vcs-web
-
-or
-
+# or
 yarn add @daily-co/daily-vcs-web
-```
 
 ### Usage
 
