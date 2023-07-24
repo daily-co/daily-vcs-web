@@ -309,15 +309,33 @@ export default class DailyVCSWebRenderer {
   }
 
   private setupEventListeners() {
-    this.callObject.on('participant-joined', this.handleParticipantsChange);
-    this.callObject.on('participant-updated', this.handleParticipantsChange);
-    this.callObject.on('participant-left', this.handleParticipantsChange);
+    this.callObject.on(
+      'participant-joined',
+      this.handleParticipantsChange.bind(this)
+    );
+    this.callObject.on(
+      'participant-updated',
+      this.handleParticipantsChange.bind(this)
+    );
+    this.callObject.on(
+      'participant-left',
+      this.handleParticipantsChange.bind(this)
+    );
   }
 
   private removeEventListeners() {
-    this.callObject.off('participant-joined', this.handleParticipantsChange);
-    this.callObject.off('participant-updated', this.handleParticipantsChange);
-    this.callObject.off('participant-left', this.handleParticipantsChange);
+    this.callObject.off(
+      'participant-joined',
+      this.handleParticipantsChange.bind(this)
+    );
+    this.callObject.off(
+      'participant-updated',
+      this.handleParticipantsChange.bind(this)
+    );
+    this.callObject.off(
+      'participant-left',
+      this.handleParticipantsChange.bind(this)
+    );
   }
 
   /**
