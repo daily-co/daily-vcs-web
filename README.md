@@ -6,7 +6,7 @@ The `@daily-co/daily-vcs-web` package enables developers to render a `VCSComposi
 
 Install the package via npm or yarn:
 
-````bash
+```bash
 npm install @daily-co/daily-vcs-web
 # or
 yarn add @daily-co/daily-vcs-web
@@ -28,8 +28,13 @@ const opts = {
   viewportSize: { w: 1280, h: 720 },
 };
 
-const renderer = new DailyVCSWebRenderer(callObject, DailyVCSBaselineComposition, rootEl, opts);
-````
+const renderer = new DailyVCSWebRenderer(
+  callObject,
+  DailyVCSBaselineComposition,
+  rootEl,
+  opts
+);
+```
 
 ### Methods
 
