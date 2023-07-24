@@ -1,15 +1,14 @@
 {
   "name": "@daily-co/daily-vcs-web",
-  "description": "A library to render Daily VCS view in the browser",
-  "version": "0.0.1",
+  "description": "This package enables developers to render a VCSComposition inside a given DOM element in the browser.",
+  "version": "0.0.1-alpha.1",
   "license": "BSD-2-Clause",
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
   "browser": "dist/index.umd.js",
   "typings": "dist/index.d.ts",
   "files": [
-    "dist",
-    "src"
+    "dist"
   ],
   "engines": {
     "node": ">=10"
