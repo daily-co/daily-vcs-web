@@ -226,6 +226,14 @@ export default class DailyVCSWebRenderer {
     return this.viewportSize;
   }
 
+  /**
+   * imageSources is a map of imageId to image URL.
+   * It's used to keep track of the images that are currently being rendered.
+   */
+  get imageSources(): Record<string, string> {
+    return this.sources.assetImages;
+  }
+
   private recomputeOutputScaleFactor() {
     const displayW = this.rootEl.clientWidth;
     const displayH = this.rootEl.clientHeight;

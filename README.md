@@ -115,6 +115,7 @@ The DailyVCSWebRenderer class also provides several read-only properties:
 | `participants`   | `string[]`                 | An array of participantIds to render.                                                                      |
 | `params`         | `Param[]`                  | A map of paramId to value. It keeps track of the current state of the VCS composition.                     |
 | `size`           | `{ w: number, h: number }` | The render viewport size used by VCS.                                                                      |
+| `imageSources`   | `Record<string, string>`   | A map of image assets. It keeps track of the current image sources                                         |
 
 ### Callbacks
 
