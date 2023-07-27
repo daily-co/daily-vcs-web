@@ -479,7 +479,7 @@ export default class DailyVCSWebRenderer {
         new Promise((resolve, reject) => {
           const img = new Image();
 
-          img.onload = () => resolve({ name, image });
+          img.onload = () => resolve({ name, image: img });
           img.onerror = () => {
             console.error(`Image load failed, asset ${name}`);
             reject(new Error(`Image load failed, asset ${name}`));
