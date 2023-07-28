@@ -453,9 +453,10 @@ export default class DailyVCSWebRenderer {
   /**
    * sendParams sends a map of param updates to the VCS composition.
    */
-  sendParams(params: Record<string, any>) {
+  sendParams(params: Record<string, any>, mergeType: Merge = 'merge') {
     if (!this.vcsApi) return;
 
+    if (mergeType === 'replace') this.paramValues = {};
     Object.entries(params).forEach(([id, value]) => this.sendParam(id, value));
   }
 
