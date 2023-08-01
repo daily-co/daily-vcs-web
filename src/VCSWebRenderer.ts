@@ -281,32 +281,26 @@ export default class DailyVCSWebRenderer {
 
   private handleParticipantsChange() {
     const participants = Object.values(this.callObject.participants());
-    const videos = participants
-      .filter((p) =>
-        this.participantIds.length > 0
-          ? this.participantIds.includes(p.session_id) &&
-            !isTrackOff(p?.tracks?.video?.state)
-          : !isTrackOff(p?.tracks?.video?.state)
-      )
+    const filteredParticipants =
+      this.participantIds.length > 0
+        ? participants.filter((p) => this.participantIds.includes(p.session_id))
+        : participants;
+    const videos = filteredParticipants
+      .filter((p) => !isTrackOff(p?.tracks?.video?.state))
       .map((p) => ({
         active: true,
-        id: p.session_id,
+        id: p?.tracks?.video?.track?.id ?? '',
         sessionId: p.session_id,
         displayName: p.user_name || 'Guest',
         track: p?.tracks?.video?.persistentTrack,
         type: 'camera' as const,
       }));
 
-    const screens = participants
-      .filter((p) =>
-        this.participantIds.length > 0
-          ? this.participantIds.includes(p.session_id) &&
-            !isTrackOff(p?.tracks?.screenVideo?.state)
-          : !isTrackOff(p?.tracks?.screenVideo?.state)
-      )
+    const screens = filteredParticipants
+      .filter((p) => !isTrackOff(p?.tracks?.screenVideo?.state))
       .map((p) => ({
         active: true,
-        id: p.session_id,
+        id: p?.tracks?.screenVideo?.track?.id ?? '',
         sessionId: p.session_id,
         displayName: '',
         track: p?.tracks?.screenVideo?.persistentTrack,
@@ -314,6 +308,24 @@ export default class DailyVCSWebRenderer {
       }));
 
     this.applyTracks([...videos, ...screens]);
+
+    const peers = filteredParticipants.map((p) => ({
+      id: p.session_id,
+      displayName: p.user_name || 'Guest',
+      video: {
+        id: p?.tracks?.video?.track?.id ?? '',
+        paused: isTrackOff(p?.tracks?.video?.state),
+      },
+      audio: {
+        id: p?.tracks?.audio?.track?.id ?? '',
+        paused: isTrackOff(p?.tracks?.audio?.state),
+      },
+      screenshareVideo: {
+        id: p?.tracks?.screenVideo?.track?.id ?? '',
+        paused: isTrackOff(p?.tracks?.screenVideo?.state),
+      },
+    }));
+    this.vcsApi.setRoomPeers(peers);
   }
 
   private setupEventListeners() {
@@ -549,7 +561,7 @@ export default class DailyVCSWebRenderer {
 
         newSlots.push({
           active: true,
-          id: `videotrack_${video.track.id}`,
+          id: video.track.id,
           element: videoEl,
           track: video.track,
           sessionId: video.sessionId,
