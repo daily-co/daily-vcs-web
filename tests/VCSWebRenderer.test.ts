@@ -11,6 +11,7 @@ const mockVCSApi: VCSApi = {
   setActiveVideoInputSlots: jest.fn(),
   setParamValue: jest.fn(),
   setScaleFactor: jest.fn(),
+  setRoomPeers: jest.fn(),
   updateImageSources: jest.fn(),
   stop: jest.fn(),
 };
@@ -231,7 +232,7 @@ describe('VCSWebRenderer', () => {
       },
       {
         active: true,
-        id: 'videotrack_track2',
+        id: 'track2',
         element: expect.any(HTMLVideoElement),
         track: { id: 'track2' },
         sessionId: 'session2',
@@ -240,6 +241,7 @@ describe('VCSWebRenderer', () => {
       },
     ]);
 
+    expect(renderer.vcsApiInstance!.setRoomPeers).toHaveBeenCalled();
     expect(renderer.vcsApiInstance!.updateImageSources).toHaveBeenCalled();
     expect(
       renderer.vcsApiInstance!.setActiveVideoInputSlots
@@ -292,7 +294,8 @@ describe('VCSWebRenderer', () => {
     });
   });
 
-  test('updateParticipantIds() should update the participantIds', () => {
+  test('updateParticipantIds() should update the participantIds', async () => {
+    await renderer.start();
     renderer.updateParticipantIds(['participant1', 'participant2']);
 
     // Assert that the participantIds are updated

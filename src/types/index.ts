@@ -38,12 +38,28 @@ export interface VCSOptions {
   scaleFactor: number;
 }
 
+export interface VCSPeer {
+  id: string;
+  displayName: string;
+  video: {
+    id: string;
+    paused: boolean;
+  };
+  audio: {};
+  screenshareVideo: {
+    id: string;
+    paused: boolean;
+  };
+  screenshareAudio: {};
+}
+
 export interface VCSApi {
   setActiveVideoInputSlots(slots: (ActiveVideoSlot | boolean)[]): void;
   setParamValue(key: string, value: any): void;
   setScaleFactor(scaleFactor: number): void;
   stop(): void;
   updateImageSources(sources: VCSSources): void;
+  setRoomPeers(peers: VCSPeer[]): void;
 }
 
 export interface VCSComposition {
