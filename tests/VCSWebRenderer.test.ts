@@ -11,7 +11,7 @@ const mockVCSApi: VCSApi = {
   setActiveVideoInputSlots: jest.fn(),
   setParamValue: jest.fn(),
   setScaleFactor: jest.fn(),
-  setRoomPeers: jest.fn(),
+  setRoomPeerDescriptionsById: jest.fn(),
   updateImageSources: jest.fn(),
   stop: jest.fn(),
 };
@@ -241,7 +241,9 @@ describe('VCSWebRenderer', () => {
       },
     ]);
 
-    expect(renderer.vcsApiInstance!.setRoomPeers).toHaveBeenCalled();
+    expect(
+      renderer.vcsApiInstance!.setRoomPeerDescriptionsById
+    ).toHaveBeenCalled();
     expect(renderer.vcsApiInstance!.updateImageSources).toHaveBeenCalled();
     expect(
       renderer.vcsApiInstance!.setActiveVideoInputSlots

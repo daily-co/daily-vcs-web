@@ -59,7 +59,7 @@ export interface VCSApi {
   setScaleFactor(scaleFactor: number): void;
   stop(): void;
   updateImageSources(sources: VCSSources): void;
-  setRoomPeers(peers: VCSPeer[]): void;
+  setRoomPeerDescriptionsById(peers: Map<string, VCSPeer>): void;
 }
 
 export interface VCSComposition {
