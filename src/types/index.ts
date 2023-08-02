@@ -45,14 +45,12 @@ export interface VCSPeer {
     id: string;
     paused: boolean;
   };
-  audio: {
-    id: string;
-    paused: boolean;
-  };
+  audio: {};
   screenshareVideo: {
     id: string;
     paused: boolean;
   };
+  screenshareAudio: {};
 }
 
 export interface VCSApi {

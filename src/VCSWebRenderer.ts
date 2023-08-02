@@ -316,14 +316,12 @@ export default class DailyVCSWebRenderer {
         id: p?.tracks?.video?.track?.id ?? '',
         paused: isTrackOff(p?.tracks?.video?.state),
       },
-      audio: {
-        id: p?.tracks?.audio?.track?.id ?? '',
-        paused: isTrackOff(p?.tracks?.audio?.state),
-      },
+      audio: {},
       screenshareVideo: {
         id: p?.tracks?.screenVideo?.track?.id ?? '',
         paused: isTrackOff(p?.tracks?.screenVideo?.state),
       },
+      screenshareAudio: {},
     }));
     this.vcsApi.setRoomPeers(peers);
   }
