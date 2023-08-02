@@ -23,10 +23,15 @@ jobs:
 
       - name: Check version changes
         id: version_changes
-        run: echo ::set-output name=version::$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} package.json)
+        run: |
+          PREVIOUS_VERSION=$(git show ${{ github.event.before }}:package.json | jq -r '.version')
+          CURRENT_VERSION=$(jq -r '.version' package.json)
+          echo "PREVIOUS_VERSION=$PREVIOUS_VERSION" >> $GITHUB_ENV
+          echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
+          test "$PREVIOUS_VERSION" != "$CURRENT_VERSION"
 
       - name: Publish to npm
-        if: steps.version_changes.outputs.version != ''
+        if: steps.version_changes.outputs.status == '0'
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
