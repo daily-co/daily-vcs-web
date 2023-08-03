@@ -1,5 +1,10 @@
 import { calculateViewportSize } from './lib/calculateViewportSize';
 import { isTrackOff } from './lib/isTrackOff';
+import {
+  createPeerObject,
+  createScreenshareObject,
+  createVideoObject,
+} from './lib/videoUtils';
 import type {
   VCSComposition,
   VCSApi,
@@ -281,52 +286,32 @@ export default class DailyVCSWebRenderer {
   }
 
   private handleParticipantsChange() {
-    const participants = Object.values(this.callObject.participants());
+    const participants = Object.fromEntries(
+      Object.values(this.callObject.participants()).map((p) => [
+        p.session_id,
+        p,
+      ])
+    );
     const filteredParticipants =
       this.participantIds.length > 0
-        ? participants.filter((p) => this.participantIds.includes(p.session_id))
-        : participants;
-    const videos = filteredParticipants
-      .filter((p) => !isTrackOff(p?.tracks?.video?.state))
-      .map((p) => ({
-        active: true,
-        id: p?.tracks?.video?.track?.id ?? '',
-        sessionId: p.session_id,
-        displayName: p.user_name || 'Guest',
-        track: p?.tracks?.video?.persistentTrack,
-        type: 'camera' as const,
-      }));
+        ? this.participantIds.map((id) => participants[id]).filter(Boolean)
+        : Object.values(participants);
 
-    const screens = filteredParticipants
-      .filter((p) => !isTrackOff(p?.tracks?.screenVideo?.state))
-      .map((p) => ({
-        active: true,
-        id: p?.tracks?.screenVideo?.track?.id ?? '',
-        sessionId: p.session_id,
-        displayName: '',
-        track: p?.tracks?.screenVideo?.persistentTrack,
-        type: 'screenshare' as const,
-      }));
+    const videos: VideoInputSlot[] = [];
+    const screens: VideoInputSlot[] = [];
+    const peers = new Map<string, VCSPeer>();
+
+    for (const p of filteredParticipants) {
+      if (!isTrackOff(p?.tracks?.video?.state)) {
+        videos.push(createVideoObject(p));
+      }
+      if (!isTrackOff(p?.tracks?.screenVideo?.state)) {
+        screens.push(createScreenshareObject(p));
+      }
+      peers.set(p.session_id, createPeerObject(p));
+    }
 
     this.applyTracks([...videos, ...screens]);
-
-    const peers = new Map<string, VCSPeer>();
-    filteredParticipants.forEach((p) => {
-      peers.set(p.session_id, {
-        id: p.session_id,
-        displayName: p.user_name || 'Guest',
-        video: {
-          id: p?.tracks?.video?.track?.id ?? '',
-          paused: isTrackOff(p?.tracks?.video?.state),
-        },
-        audio: {},
-        screenshareVideo: {
-          id: p?.tracks?.screenVideo?.track?.id ?? '',
-          paused: isTrackOff(p?.tracks?.screenVideo?.state),
-        },
-        screenshareAudio: {},
-      });
-    });
     this.vcsApi.setRoomPeerDescriptionsById(peers);
   }
 
