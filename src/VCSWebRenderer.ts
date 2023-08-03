@@ -11,6 +11,7 @@ import type {
   VCSCallbacks,
   Params,
   Merge,
+  VCSPeer,
 } from './types';
 
 import { DailyCall } from '@daily-co/daily-js';
@@ -309,21 +310,24 @@ export default class DailyVCSWebRenderer {
 
     this.applyTracks([...videos, ...screens]);
 
-    const peers = filteredParticipants.map((p) => ({
-      id: p.session_id,
-      displayName: p.user_name || 'Guest',
-      video: {
-        id: p?.tracks?.video?.track?.id ?? '',
-        paused: isTrackOff(p?.tracks?.video?.state),
-      },
-      audio: {},
-      screenshareVideo: {
-        id: p?.tracks?.screenVideo?.track?.id ?? '',
-        paused: isTrackOff(p?.tracks?.screenVideo?.state),
-      },
-      screenshareAudio: {},
-    }));
-    this.vcsApi.setRoomPeers(peers);
+    const peers = new Map<string, VCSPeer>();
+    filteredParticipants.forEach((p) => {
+      peers.set(p.session_id, {
+        id: p.session_id,
+        displayName: p.user_name || 'Guest',
+        video: {
+          id: p?.tracks?.video?.track?.id ?? '',
+          paused: isTrackOff(p?.tracks?.video?.state),
+        },
+        audio: {},
+        screenshareVideo: {
+          id: p?.tracks?.screenVideo?.track?.id ?? '',
+          paused: isTrackOff(p?.tracks?.screenVideo?.state),
+        },
+        screenshareAudio: {},
+      });
+    });
+    this.vcsApi.setRoomPeerDescriptionsById(peers);
   }
 
   private setupEventListeners() {
