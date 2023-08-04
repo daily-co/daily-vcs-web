@@ -49,6 +49,7 @@ export default class DailyVCSWebRenderer {
    */
   private readonly viewportSize!: ViewportSize;
   private readonly defaultParams!: Params;
+  private readonly defaultAssets!: Record<string, string>;
   private readonly getAssetUrlCb!: GetAssetUrlCb;
   /**
    * fps is the framerate of the VCS composition.
@@ -111,6 +112,7 @@ export default class DailyVCSWebRenderer {
    * @param opts.callbacks is a map of callbacks.
    * @param opts.viewportSize is the size of the DOM element that will be rendered.
    * @param opts.defaultParams is a map of paramId to default value.
+   * @param opts.defaultAssets is a map of assetId to asset URL.
    * @param opts.getAssetUrlCb is a callback that will be called when the VCS composition needs to load an asset.
    * @param opts.maxVideoInputSlots is the maximum number of video input slots that can be rendered.
    * @param opts.fps is the framerate of the VCS composition.
@@ -149,6 +151,11 @@ export default class DailyVCSWebRenderer {
 
     if (opts?.defaultParams) {
       this.defaultParams = opts.defaultParams;
+    }
+
+    if (opts?.defaultAssets) {
+      this.defaultAssets = opts.defaultAssets;
+      this.updateImageSources(this.defaultAssets);
     }
 
     if (opts?.maxVideoInputSlots) {
