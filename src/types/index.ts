@@ -89,6 +89,7 @@ export interface Options {
   fps?: number;
   viewportSize?: ViewportSize;
   defaultParams?: Params;
+  defaultAssets?: Record<string, string>;
   maxVideoInputSlots?: number;
   getAssetUrlCb: GetAssetUrlCb;
   callbacks?: VCSCallbacks;
