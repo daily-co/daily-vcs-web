@@ -1,22 +1,19 @@
 import { DailyParticipant } from '@daily-co/daily-js';
 import { isTrackOff } from './isTrackOff';
 
-export const createVideoObject = (p: DailyParticipant) => ({
+export const createTrackObject = (
+  p: DailyParticipant,
+  trackName: 'video' | 'screenVideo' | 'rmpVideo' = 'video'
+) => ({
   active: true,
-  id: p?.tracks?.video?.track?.id ?? '',
+  id: p?.tracks?.[trackName]?.track?.id ?? '',
   sessionId: p.session_id,
-  displayName: p.user_name || 'Guest',
-  track: p?.tracks?.video?.persistentTrack,
-  type: 'camera' as const,
-});
-
-export const createScreenshareObject = (p: DailyParticipant) => ({
-  active: true,
-  id: p?.tracks?.screenVideo?.track?.id ?? '',
-  sessionId: p.session_id,
-  displayName: '',
-  track: p?.tracks?.screenVideo?.persistentTrack,
-  type: 'screenshare' as const,
+  displayName: trackName === 'video' ? p.user_name || 'Guest' : '',
+  track: p?.tracks?.[trackName]?.persistentTrack,
+  type:
+    trackName === 'screenVideo'
+      ? ('screenshare' as const)
+      : ('camera' as const),
 });
 
 export const createPeerObject = (p: DailyParticipant) => ({

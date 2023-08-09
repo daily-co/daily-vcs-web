@@ -1,10 +1,6 @@
 import { calculateViewportSize } from './lib/calculateViewportSize';
 import { isTrackOff } from './lib/isTrackOff';
-import {
-  createPeerObject,
-  createScreenshareObject,
-  createVideoObject,
-} from './lib/videoUtils';
+import { createPeerObject, createTrackObject } from './lib/videoUtils';
 import type {
   VCSComposition,
   VCSApi,
@@ -309,11 +305,17 @@ export default class DailyVCSWebRenderer {
     const peers = new Map<string, VCSPeer>();
 
     for (const p of filteredParticipants) {
-      if (!isTrackOff(p?.tracks?.video?.state)) {
-        videos.push(createVideoObject(p));
-      }
-      if (!isTrackOff(p?.tracks?.screenVideo?.state)) {
-        screens.push(createScreenshareObject(p));
+      if (p?.participantType === 'remote-media-player') {
+        // not checking the track state here, as we want to render the last frame of the video
+        // when the track is paused
+        videos.push(createTrackObject(p, 'rmpVideo'));
+      } else {
+        if (!isTrackOff(p?.tracks?.video?.state)) {
+          videos.push(createTrackObject(p));
+        }
+        if (!isTrackOff(p?.tracks?.screenVideo?.state)) {
+          screens.push(createTrackObject(p, 'screenVideo'));
+        }
       }
       peers.set(p.session_id, createPeerObject(p));
     }
