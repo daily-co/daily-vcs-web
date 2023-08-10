@@ -10,18 +10,22 @@ export const createTrackObject = (
   sessionId: p.session_id,
   displayName: trackName === 'video' ? p.user_name || 'Guest' : '',
   track: p?.tracks?.[trackName]?.persistentTrack,
-  type:
-    trackName === 'screenVideo'
-      ? ('screenshare' as const)
-      : ('camera' as const),
+  type: trackName === 'video' ? ('camera' as const) : ('screenshare' as const),
 });
 
-export const createPeerObject = (p: DailyParticipant) => ({
+export const createPeerObject = (
+  p: DailyParticipant,
+  isRMP: boolean = false
+) => ({
   id: p.session_id,
   displayName: p.user_name || 'Guest',
   video: {
-    id: p?.tracks?.video?.track?.id ?? '',
-    paused: isTrackOff(p?.tracks?.video?.state),
+    id:
+      (isRMP ? p?.tracks?.rmpVideo?.track?.id : p?.tracks?.video?.track?.id) ??
+      '',
+    paused: isTrackOff(
+      isRMP ? p?.tracks?.rmpVideo?.state ?? 'off' : p?.tracks?.video?.state
+    ),
   },
   audio: {},
   screenshareVideo: {
