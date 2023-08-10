@@ -1,7 +1,7 @@
 {
   "name": "@daily-co/daily-vcs-web",
   "description": "This package enables developers to render a VCSComposition inside a given DOM element in the browser.",
-  "version": "0.0.1-alpha.6",
+  "version": "0.0.1-alpha.7",
   "license": "BSD-2-Clause",
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
