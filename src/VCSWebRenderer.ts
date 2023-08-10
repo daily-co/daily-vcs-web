@@ -317,7 +317,10 @@ export default class DailyVCSWebRenderer {
           screens.push(createTrackObject(p, 'screenVideo'));
         }
       }
-      peers.set(p.session_id, createPeerObject(p));
+      peers.set(
+        p.session_id,
+        createPeerObject(p, p?.participantType === 'remote-media-player')
+      );
     }
 
     this.applyTracks([...videos, ...screens]);
