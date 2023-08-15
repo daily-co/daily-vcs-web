@@ -97,3 +97,5 @@ export interface Options {
 }
 
 export type Merge = 'replace' | 'merge';
+
+export type State = 'idle' | 'started' | 'stopped' | 'error';
