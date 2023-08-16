@@ -44,7 +44,7 @@ export default class DailyVCSWebRenderer {
    * viewportSize is the size of the DOM element that will be rendered.
    * it will be neglected if the aspectRatio is set.
    */
-  private readonly viewportSize!: ViewportSize;
+  private viewportSize!: ViewportSize;
   private readonly defaultParams!: Params;
   private readonly defaultAssets!: Record<string, string>;
   private readonly getAssetUrlCb!: GetAssetUrlCb;
@@ -94,7 +94,7 @@ export default class DailyVCSWebRenderer {
    * aspectRatio is to automatically compute the viewportSize based on the rootEl size.
    * It defaults to 16/9.
    */
-  private readonly aspectRatio: number = DEFAULT_ASPECT_RATIO;
+  private aspectRatio: number = DEFAULT_ASPECT_RATIO;
 
   private participantIds: string[] = [];
   private resizeObserver!: ResizeObserver | null;
@@ -197,6 +197,14 @@ export default class DailyVCSWebRenderer {
    */
   get rootElement(): HTMLElement {
     return this.rootEl;
+  }
+
+  /**
+   * aspectRatio is to automatically compute the viewportSize based on the rootEl size.
+   * It defaults to 16/9.
+   */
+  get ratio(): number {
+    return this.aspectRatio;
   }
 
   /**
@@ -621,6 +629,20 @@ export default class DailyVCSWebRenderer {
       }
       this.sendActiveVideoInputSlots();
       this.rootDisplaySizeChanged();
+    }
+  }
+
+  /**
+   * updateAspectRatio updates the aspect ratio of the element.
+   * @param aspectRatio is the new aspect ratio.
+   * it will restart the VCS composition.
+   */
+  updateAspectRatio(aspectRatio: number) {
+    this.aspectRatio = aspectRatio;
+    this.viewportSize = calculateViewportSize(this.rootEl, this.aspectRatio);
+    if (this.vcsState === 'started') {
+      this.stop();
+      this.start();
     }
   }
 
