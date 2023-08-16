@@ -13,6 +13,7 @@ import type {
   Params,
   Merge,
   VCSPeer,
+  State,
 } from './types';
 
 import { DailyCall } from '@daily-co/daily-js';
@@ -97,6 +98,8 @@ export default class DailyVCSWebRenderer {
 
   private participantIds: string[] = [];
   private resizeObserver!: ResizeObserver | null;
+
+  private vcsState: State = 'idle';
 
   /**
    * constructor
@@ -194,6 +197,13 @@ export default class DailyVCSWebRenderer {
    */
   get rootElement(): HTMLElement {
     return this.rootEl;
+  }
+
+  /**
+   * state is the current state of the VCS composition.
+   */
+  get state(): State {
+    return this.vcsState;
   }
 
   /**
@@ -381,6 +391,7 @@ export default class DailyVCSWebRenderer {
         enablePreload: true,
       }
     );
+    this.vcsState = 'started';
 
     this.handleParticipantsChange();
     this.setupEventListeners();
@@ -406,12 +417,14 @@ export default class DailyVCSWebRenderer {
 
     this.removeEventListeners();
     this.vcsApi.stop();
+    this.vcsState = 'stopped';
     this.callbacks.onStop?.();
     this.stopResizeObserver();
   }
 
   private onError(error: any) {
     console.error('VCS composition error: ', error);
+    this.vcsState = 'error';
     this.callbacks.onError?.(error);
   }
 
@@ -621,6 +634,7 @@ export default class DailyVCSWebRenderer {
       mergeType === 'merge'
         ? [...new Set([...this.participantIds, ...participantIds])]
         : participantIds;
-    this.handleParticipantsChange();
+
+    if (this.vcsState === 'started') this.handleParticipantsChange();
   }
 }
