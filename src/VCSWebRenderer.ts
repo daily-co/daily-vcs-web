@@ -96,7 +96,7 @@ export default class DailyVCSWebRenderer {
    */
   private readonly aspectRatio: number = DEFAULT_ASPECT_RATIO;
 
-  private participantIds: string[] = [];
+  private participantIds!: string[];
   private resizeObserver!: ResizeObserver | null;
 
   private vcsState: State = 'idle';
@@ -164,7 +164,7 @@ export default class DailyVCSWebRenderer {
     if (opts?.fps) this.fps = opts.fps;
     if (opts?.callbacks) this.callbacks = opts.callbacks;
 
-    if (opts?.participantIds && opts?.participantIds.length > 0) {
+    if (Array.isArray(opts?.participantIds)) {
       this.participantIds = opts.participantIds;
     }
 
@@ -305,10 +305,9 @@ export default class DailyVCSWebRenderer {
         p,
       ])
     );
-    const filteredParticipants =
-      this.participantIds.length > 0
-        ? this.participantIds.map((id) => participants[id]).filter(Boolean)
-        : Object.values(participants);
+    const filteredParticipants = Array.isArray(this.participantIds)
+      ? this.participantIds.map((id) => participants[id]).filter(Boolean)
+      : Object.values(participants);
 
     const videos: VideoInputSlot[] = [];
     const screens: VideoInputSlot[] = [];
