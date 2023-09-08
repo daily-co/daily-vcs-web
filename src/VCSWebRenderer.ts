@@ -404,12 +404,7 @@ export default class DailyVCSWebRenderer {
     this.setupEventListeners();
 
     this.sendActiveVideoInputSlots();
-
-    if (this.defaultParams) {
-      for (const key in this.defaultParams) {
-        this.sendParam(key, this.defaultParams[key]);
-      }
-    }
+    this.sendParams({ ...this.paramValues, ...this.defaultParams });
 
     this.rootDisplaySizeChanged();
     this.callbacks.onStart?.();
@@ -472,21 +467,19 @@ export default class DailyVCSWebRenderer {
    * @param value
    */
   sendParam(paramId: string, value: any) {
-    if (!this.vcsApi) return;
-
-    this.vcsApi.setParamValue(paramId, value);
+    if (this.vcsApi) {
+      this.vcsApi.setParamValue(paramId, value);
+      this.callbacks.onParamsChanged?.(this.paramValues);
+    }
 
     // retain a copy of param values so we can reset renderer to the same state
     this.paramValues[paramId] = value;
-    this.callbacks.onParamsChanged?.(this.paramValues);
   }
 
   /**
    * sendParams sends a map of param updates to the VCS composition.
    */
   sendParams(params: Record<string, any>, mergeType: Merge = 'merge') {
-    if (!this.vcsApi) return;
-
     if (mergeType === 'replace') this.paramValues = {};
     Object.entries(params).forEach(([id, value]) => this.sendParam(id, value));
   }
