@@ -5,7 +5,7 @@ function makeVideoIdForVcs(p: DailyParticipant, isScreenshare: boolean) {
   return `${p.session_id}${isScreenshare ? '_sshare' : ''}`;
 }
 
-export const createTrackObject = (
+export const createVideoInputObject = (
   p: DailyParticipant,
   trackName: 'video' | 'screenVideo' | 'rmpVideo' = 'video'
 ) => {

@@ -1,6 +1,6 @@
 import { calculateViewportSize } from './lib/calculateViewportSize';
 import { isTrackOff } from './lib/isTrackOff';
-import { createPeerObject, createTrackObject } from './lib/videoUtils';
+import { createPeerObject, createVideoInputObject } from './lib/videoUtils';
 import type {
   VCSComposition,
   VCSApi,
@@ -98,6 +98,9 @@ export default class DailyVCSWebRenderer {
 
   private participantIds!: string[];
   private includePausedVideo: boolean = true;
+
+  // tracks video input ids which 1) have been displayed at some point, 2) are not screenshares
+  private knownNonScreenshareVideoInputIds: Set<string> = new Set();
 
   private resizeObserver!: ResizeObserver | null;
 
@@ -337,13 +340,13 @@ export default class DailyVCSWebRenderer {
       if (p?.participantType === 'remote-media-player') {
         // not checking the track state here, as we want to render the last frame of the video
         // when the track is paused
-        videos.push(createTrackObject(p, 'rmpVideo'));
+        videos.push(createVideoInputObject(p, 'rmpVideo'));
       } else {
         if (includePaused || !isTrackOff(p?.tracks?.video?.state)) {
-          videos.push(createTrackObject(p));
+          videos.push(createVideoInputObject(p));
         }
         if (includePaused || !isTrackOff(p?.tracks?.screenVideo?.state)) {
-          screens.push(createTrackObject(p, 'screenVideo'));
+          screens.push(createVideoInputObject(p, 'screenVideo'));
         }
       }
       peers.set(
@@ -574,9 +577,22 @@ export default class DailyVCSWebRenderer {
     const newSlots: VideoInput[] = [];
 
     for (const video of videos) {
+      const isScreenshare = video.type === 'screenshare';
+
       if (!video.track) {
-        //console.log('skipping at %d: ', videos.indexOf(video), video);
-        continue;
+        if (
+          this.includePausedVideo &&
+          !isScreenshare &&
+          this.knownNonScreenshareVideoInputIds.has(video.id)
+        ) {
+          // if this is a camera track that we've seen previously,
+          // keep it in the list so the paused placeholder can be rendered.
+          // screenshares are excluded because apps like Daily Studio can create
+          // these tracks in a standby paused state, and we don't want to show those.
+        } else {
+          //console.log('skipping at %d: ', videos.indexOf(video), video);
+          continue;
+        }
       }
 
       const prevSlot = prevSlots.find((it) => it.id === video.id);
@@ -607,6 +623,10 @@ export default class DailyVCSWebRenderer {
           ...video,
           element: videoEl,
         });
+
+        if (!isScreenshare) {
+          this.knownNonScreenshareVideoInputIds.add(video.id);
+        }
       }
     }
 
