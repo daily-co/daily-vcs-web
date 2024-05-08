@@ -313,6 +313,15 @@ export default class DailyVCSWebRenderer {
     this.rootEl.appendChild(el);
   }
 
+  private handleActiveSpeakerChange() {
+    /*console.log(
+      'active speaker now: ',
+      this.callObject.getActiveSpeaker().peerId
+    );*/
+    // it's fine to simply rebuild the video input data for VCS on this update
+    this.handleParticipantsChange();
+  }
+
   private handleParticipantsChange() {
     const participants = Object.fromEntries(
       Object.values(this.callObject.participants()).map((p) => [
@@ -330,28 +339,37 @@ export default class DailyVCSWebRenderer {
 
     const includePaused = this.includePausedVideo;
 
+    const { peerId: activeSpeakerId } = this.callObject.getActiveSpeaker();
+
     /*console.log(
-      'includepaused %s, filtered participants: ',
+      'includepaused %s, activespeaker %s, filtered participants: ',
       includePaused,
+      activeSpeakerId,
       filteredParticipants
     );*/
 
     for (const p of filteredParticipants) {
+      const dominant = p.session_id === activeSpeakerId;
+
       if (p?.participantType === 'remote-media-player') {
         // not checking the track state here, as we want to render the last frame of the video
         // when the track is paused
-        videos.push(createVideoInputObject(p, 'rmpVideo'));
+        videos.push(createVideoInputObject(p, dominant, 'rmpVideo'));
       } else {
         if (includePaused || !isTrackOff(p?.tracks?.video?.state)) {
-          videos.push(createVideoInputObject(p));
+          videos.push(createVideoInputObject(p, dominant));
         }
         if (includePaused || !isTrackOff(p?.tracks?.screenVideo?.state)) {
-          screens.push(createVideoInputObject(p, 'screenVideo'));
+          screens.push(createVideoInputObject(p, dominant, 'screenVideo'));
         }
       }
       peers.set(
         p.session_id,
-        createPeerObject(p, p?.participantType === 'remote-media-player')
+        createPeerObject(
+          p,
+          dominant,
+          p?.participantType === 'remote-media-player'
+        )
       );
     }
 
@@ -374,6 +392,10 @@ export default class DailyVCSWebRenderer {
       'participant-left',
       this.handleParticipantsChange.bind(this)
     );
+    this.callObject.on(
+      'active-speaker-change',
+      this.handleActiveSpeakerChange.bind(this)
+    );
   }
 
   private removeEventListeners() {
@@ -388,6 +410,10 @@ export default class DailyVCSWebRenderer {
     this.callObject.off(
       'participant-left',
       this.handleParticipantsChange.bind(this)
+    );
+    this.callObject.off(
+      'active-speaker-change',
+      this.handleActiveSpeakerChange.bind(this)
     );
   }
 
@@ -453,7 +479,8 @@ export default class DailyVCSWebRenderer {
     id = '',
     name = '',
     isScreenshare = false,
-    paused = false
+    paused = false,
+    dominant = false
   ) {
     this.activeVideoInputSlots[idx] = active
       ? {
@@ -461,6 +488,7 @@ export default class DailyVCSWebRenderer {
           type: isScreenshare ? 'screenshare' : 'camera',
           displayName: isScreenshare ? '' : name,
           paused,
+          dominant,
         }
       : false;
   }
@@ -599,6 +627,7 @@ export default class DailyVCSWebRenderer {
       if (prevSlot && prevSlot.track?.id === video.track?.id) {
         newSlots.push({
           ...prevSlot,
+          dominant: video.dominant,
           paused: video.paused,
           displayName: video.displayName,
         });
@@ -647,6 +676,7 @@ export default class DailyVCSWebRenderer {
         if (
           news.id !== prev.id ||
           news.paused !== prev.paused ||
+          news.dominant !== prev.dominant ||
           news.displayName !== prev.displayName ||
           news.track?.id !== prev.track?.id
         ) {
@@ -669,7 +699,8 @@ export default class DailyVCSWebRenderer {
             slot.id,
             slot.displayName,
             slot.type === 'screenshare',
-            slot.paused
+            slot.paused,
+            slot.dominant
           );
         } else {
           this.setActiveVideoInput(i, false);
