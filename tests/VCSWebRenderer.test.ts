@@ -4,7 +4,7 @@ import {
   VCSComposition,
   Options,
   VCSApi,
-  VideoInputSlot,
+  VideoInput,
 } from '../src';
 
 const mockVCSApi: VCSApi = {
@@ -184,22 +184,20 @@ describe('VCSWebRenderer', () => {
   test('applyTracks should handle videoSlots update correctly', async () => {
     await renderer.start();
 
-    const videoInputSlots: VideoInputSlot[] = [
+    const videoInputs: VideoInput[] = [
       {
-        active: true,
         id: 'slot1',
         track: { id: 'track1' } as MediaStreamTrack,
-        sessionId: 'session1',
         displayName: 'User1',
         type: 'camera',
+        paused: false,
       },
       {
-        active: true,
         id: 'slot2',
         track: { id: 'track2' } as MediaStreamTrack,
-        sessionId: 'session2',
         displayName: 'User2',
         type: 'camera',
+        paused: false,
       },
     ];
 
@@ -207,37 +205,34 @@ describe('VCSWebRenderer', () => {
       assetImages: { ...renderer['sources'].assetImages },
       videoSlots: [
         {
-          active: true,
           id: 'slot1',
           element: document.createElement('video'),
           track: { id: 'track1' } as MediaStreamTrack,
-          sessionId: 'session1',
           displayName: 'User1',
           type: 'camera',
+          paused: false,
         },
       ],
     };
 
-    renderer['applyTracks'](videoInputSlots);
+    renderer['applyTracks'](videoInputs);
 
     expect(renderer['sources'].videoSlots).toEqual([
       {
-        active: true,
         id: 'slot1',
         element: expect.any(HTMLVideoElement),
         track: { id: 'track1' },
-        sessionId: 'session1',
         displayName: 'User1',
         type: 'camera',
+        paused: false,
       },
       {
-        active: true,
-        id: 'track2',
+        id: 'slot2',
         element: expect.any(HTMLVideoElement),
         track: { id: 'track2' },
-        sessionId: 'session2',
         displayName: 'User2',
         type: 'camera',
+        paused: false,
       },
     ]);
 

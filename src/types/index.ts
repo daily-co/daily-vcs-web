@@ -6,8 +6,8 @@ export interface VideoInput {
   id: string;
   type: VcsVideoInputType;
   displayName: string;
-  paused: boolean;
-  pausedByUser: boolean;
+  paused?: boolean;
+  pausedByUser?: boolean;
   element?: HTMLVideoElement;
   track?: MediaStreamTrack;
 }
