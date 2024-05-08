@@ -1,26 +1,27 @@
 export type AssetType = 'font' | 'image';
 export type Params = Record<string, string | number | boolean>;
+export type VcsVideoInputType = 'camera' | 'screenshare';
 
-export interface ActiveVideoSlot {
-  displayName?: string;
-  dominant?: boolean;
+export interface VideoInput {
   id: string;
-  paused?: boolean;
-  type?: 'camera' | 'screenshare';
+  type: VcsVideoInputType;
+  displayName: string;
+  paused: boolean;
+  pausedByUser: boolean;
+  element?: HTMLVideoElement;
+  track?: MediaStreamTrack;
 }
 
-export interface VideoInputSlot {
-  active: boolean;
-  displayName: string;
-  element?: HTMLVideoElement;
+export interface ActiveVideoSlot {
   id: string;
-  sessionId: string;
-  track?: MediaStreamTrack;
-  type: 'camera' | 'screenshare';
+  type: VcsVideoInputType;
+  displayName?: string;
+  paused?: boolean;
+  dominant?: boolean;
 }
 
 export interface VCSSources {
-  videoSlots: (VideoInputSlot | boolean)[];
+  videoSlots: (VideoInput | boolean)[];
   assetImages: Record<string, string>;
 }
 
@@ -94,6 +95,7 @@ export interface Options {
   getAssetUrlCb: GetAssetUrlCb;
   callbacks?: VCSCallbacks;
   participantIds?: string[];
+  includePausedVideo?: boolean;
 }
 
 export type Merge = 'replace' | 'merge';

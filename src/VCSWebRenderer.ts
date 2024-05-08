@@ -4,7 +4,7 @@ import { createPeerObject, createTrackObject } from './lib/videoUtils';
 import type {
   VCSComposition,
   VCSApi,
-  VideoInputSlot,
+  VideoInput,
   ViewportSize,
   ActiveVideoSlot,
   GetAssetUrlCb,
@@ -78,7 +78,7 @@ export default class DailyVCSWebRenderer {
    * It's used to keep track of the video tracks and images that are currently being rendered.
    */
   private sources: {
-    videoSlots: VideoInputSlot[];
+    videoSlots: VideoInput[];
     assetImages: Record<string, string>;
   } = {
     videoSlots: [],
@@ -97,6 +97,8 @@ export default class DailyVCSWebRenderer {
   private aspectRatio: number = DEFAULT_ASPECT_RATIO;
 
   private participantIds!: string[];
+  private includePausedVideo: boolean = true;
+
   private resizeObserver!: ResizeObserver | null;
 
   private vcsState: State = 'idle';
@@ -117,6 +119,7 @@ export default class DailyVCSWebRenderer {
    * @param opts.fps is the framerate of the VCS composition.
    * @param opts.aspectRatio is to automatically compute the viewportSize based on the rootEl size.
    * @param opts.participantIds is an array of participantIds to render.
+   * @param opts.includePausedVideo determines whether to include paused video tracks.
    */
   constructor(
     callObject: DailyCall,
@@ -167,6 +170,7 @@ export default class DailyVCSWebRenderer {
     if (Array.isArray(opts?.participantIds)) {
       this.participantIds = opts.participantIds;
     }
+    this.includePausedVideo = opts?.includePausedVideo ?? true;
 
     this.recomputeOutputScaleFactor();
 
@@ -317,9 +321,17 @@ export default class DailyVCSWebRenderer {
       ? this.participantIds.map((id) => participants[id]).filter(Boolean)
       : Object.values(participants);
 
-    const videos: VideoInputSlot[] = [];
-    const screens: VideoInputSlot[] = [];
+    const videos: VideoInput[] = [];
+    const screens: VideoInput[] = [];
     const peers = new Map<string, VCSPeer>();
+
+    const includePaused = this.includePausedVideo;
+
+    /*console.log(
+      'includepaused %s, filtered participants: ',
+      includePaused,
+      filteredParticipants
+    );*/
 
     for (const p of filteredParticipants) {
       if (p?.participantType === 'remote-media-player') {
@@ -327,10 +339,10 @@ export default class DailyVCSWebRenderer {
         // when the track is paused
         videos.push(createTrackObject(p, 'rmpVideo'));
       } else {
-        if (!isTrackOff(p?.tracks?.video?.state)) {
+        if (includePaused || !isTrackOff(p?.tracks?.video?.state)) {
           videos.push(createTrackObject(p));
         }
-        if (!isTrackOff(p?.tracks?.screenVideo?.state)) {
+        if (includePaused || !isTrackOff(p?.tracks?.screenVideo?.state)) {
           screens.push(createTrackObject(p, 'screenVideo'));
         }
       }
@@ -339,6 +351,8 @@ export default class DailyVCSWebRenderer {
         createPeerObject(p, p?.participantType === 'remote-media-player')
       );
     }
+
+    //console.log(' .... peers: ', peers);
 
     this.applyTracks([...videos, ...screens]);
     this.vcsApi.setRoomPeerDescriptionsById(peers);
@@ -435,13 +449,15 @@ export default class DailyVCSWebRenderer {
     active: boolean,
     id = '',
     name = '',
-    isScreenshare = false
+    isScreenshare = false,
+    paused = false
   ) {
     this.activeVideoInputSlots[idx] = active
       ? {
           id: id || '',
           type: isScreenshare ? 'screenshare' : 'camera',
           displayName: isScreenshare ? '' : name,
+          paused,
         }
       : false;
   }
@@ -457,6 +473,7 @@ export default class DailyVCSWebRenderer {
         arr.push(false);
       }
     }
+    //console.log('sending video input slots: ', arr);
 
     this.vcsApi.setActiveVideoInputSlots(arr);
   }
@@ -486,6 +503,8 @@ export default class DailyVCSWebRenderer {
 
   private sendUpdateImageSources() {
     if (!this.vcsApi) return;
+
+    //console.log('sending image sources: ', this.sources);
 
     this.vcsApi.updateImageSources(this.sources);
   }
@@ -546,39 +565,47 @@ export default class DailyVCSWebRenderer {
    * applyTracks applies the video tracks to the VCS composition.
    * @param videos is an array of video tracks.
    */
-  private applyTracks(videos: VideoInputSlot[]) {
+  private applyTracks(videos: VideoInput[]) {
     if (!this.sources || !videos) return;
 
+    //console.log('applyTracks %d: ', videos.length, videos);
+
     const prevSlots = this.sources.videoSlots;
-    const newSlots: VideoInputSlot[] = [];
+    const newSlots: VideoInput[] = [];
 
     for (const video of videos) {
-      if (!video?.track) continue;
+      if (!video.track) {
+        //console.log('skipping at %d: ', videos.indexOf(video), video);
+        continue;
+      }
+
       const prevSlot = prevSlots.find((it) => it.id === video.id);
-      if (prevSlot && prevSlot?.track?.id === video.track.id) {
-        newSlots.push({ ...prevSlot, displayName: video.displayName });
+      if (prevSlot && prevSlot.track?.id === video.track?.id) {
+        newSlots.push({
+          ...prevSlot,
+          paused: video.paused,
+          displayName: video.displayName,
+        });
       } else {
-        const mediaStream = new MediaStream([video.track]);
         let videoEl;
-        if (prevSlot?.element) {
-          videoEl = prevSlot.element;
-        } else {
-          videoEl = document.createElement('video');
-          this.placeVideoSourceInDOM(videoEl, video.track.id);
+        if (video.track) {
+          const mediaStream = new MediaStream([video.track]);
+          if (prevSlot?.element) {
+            videoEl = prevSlot.element;
+          } else {
+            videoEl = document.createElement('video');
+            this.placeVideoSourceInDOM(videoEl, video.track.id);
+          }
+          videoEl.srcObject = mediaStream;
+          videoEl.setAttribute('autoplay', 'true');
+          videoEl.setAttribute('playsinline', 'true');
+          videoEl.setAttribute('controls', 'false');
+          //console.log('created video el for %s', video.id);
         }
-        videoEl.srcObject = mediaStream;
-        videoEl.setAttribute('autoplay', 'true');
-        videoEl.setAttribute('playsinline', 'true');
-        videoEl.setAttribute('controls', 'false');
 
         newSlots.push({
-          active: true,
-          id: video.track.id,
+          ...video,
           element: videoEl,
-          track: video.track,
-          sessionId: video.sessionId,
-          displayName: video.displayName,
-          type: video.type,
         });
       }
     }
@@ -594,15 +621,23 @@ export default class DailyVCSWebRenderer {
     let didChange = newSlots.length !== prevSlots.length;
     if (!didChange) {
       for (let i = 0; i < newSlots.length; i++) {
-        if (newSlots[i].id !== prevSlots[i].id) {
+        const news = newSlots[i];
+        const prev = prevSlots[i];
+        //console.log(' ... %d', i, news, prev);
+        if (
+          news.id !== prev.id ||
+          news.paused !== prev.paused ||
+          news.displayName !== prev.displayName ||
+          news.track?.id !== prev.track?.id
+        ) {
           didChange = true;
           break;
         }
       }
     }
-
     if (didChange) {
       this.sources.videoSlots = newSlots;
+
       this.sendUpdateImageSources();
 
       for (let i = 0; i < MAX_VIDEO_INPUT_SLOTS; i++) {
@@ -613,13 +648,16 @@ export default class DailyVCSWebRenderer {
             true,
             slot.id,
             slot.displayName,
-            slot.type === 'screenshare'
+            slot.type === 'screenshare',
+            slot.paused
           );
         } else {
           this.setActiveVideoInput(i, false);
         }
       }
       this.sendActiveVideoInputSlots();
+
+      // FIXME: why is this called here?
       this.rootDisplaySizeChanged();
     }
   }
