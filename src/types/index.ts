@@ -32,12 +32,19 @@ export type GetAssetUrlCb = (
   type: AssetType
 ) => string;
 
+export type WebFrameCb = (
+  webFrameId: string,
+  webFrameOpts: any,
+  containerEl: HTMLElement
+) => void;
+
 export interface VCSOptions {
+  fps: number;
+  scaleFactor: number;
   enablePreload: boolean;
   errorCb(error: any): void;
-  fps: number;
   getAssetUrlCb: GetAssetUrlCb;
-  scaleFactor: number;
+  webFrameCb?: WebFrameCb;
 }
 
 export interface VCSPeer {
@@ -87,13 +94,14 @@ export interface VCSCallbacks {
 }
 
 export interface Options {
+  getAssetUrlCb: GetAssetUrlCb;
   aspectRatio?: number;
   fps?: number;
   viewportSize?: ViewportSize;
   defaultParams?: Params;
   defaultAssets?: Record<string, string>;
   maxVideoInputSlots?: number;
-  getAssetUrlCb: GetAssetUrlCb;
+  webFrameCb?: WebFrameCb;
   callbacks?: VCSCallbacks;
   participantIds?: string[];
   includePausedVideo?: boolean;

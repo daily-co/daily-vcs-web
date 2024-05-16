@@ -14,6 +14,7 @@ import type {
   Merge,
   VCSPeer,
   State,
+  WebFrameCb,
 } from './types';
 
 import { DailyCall } from '@daily-co/daily-js';
@@ -48,6 +49,7 @@ export default class DailyVCSWebRenderer {
   private readonly defaultParams!: Params;
   private readonly defaultAssets!: Record<string, string>;
   private readonly getAssetUrlCb!: GetAssetUrlCb;
+  private readonly webFrameCb?: WebFrameCb;
   /**
    * fps is the framerate of the VCS composition.
    * It defaults to 30.
@@ -118,6 +120,7 @@ export default class DailyVCSWebRenderer {
    * @param opts.defaultParams is a map of paramId to default value.
    * @param opts.defaultAssets is a map of assetId to asset URL.
    * @param opts.getAssetUrlCb is a callback that will be called when the VCS composition needs to load an asset.
+   * @param opts.webFrameCb is a callback that will be called when a WebFrame element has new properties.
    * @param opts.maxVideoInputSlots is the maximum number of video input slots that can be rendered.
    * @param opts.fps is the framerate of the VCS composition.
    * @param opts.aspectRatio is to automatically compute the viewportSize based on the rootEl size.
@@ -140,7 +143,8 @@ export default class DailyVCSWebRenderer {
       return;
     }
     this.comp = comp;
-    this.getAssetUrlCb = opts?.getAssetUrlCb ?? null;
+    this.getAssetUrlCb = opts.getAssetUrlCb;
+    this.webFrameCb = opts?.webFrameCb ?? undefined;
 
     this.rootEl = rootEl;
 
@@ -436,6 +440,7 @@ export default class DailyVCSWebRenderer {
       {
         errorCb: this.onError.bind(this),
         getAssetUrlCb: this.getAssetUrlCb,
+        webFrameCb: this.webFrameCb,
         fps: this.fps,
         scaleFactor: this.scaleFactor,
         enablePreload: true,
