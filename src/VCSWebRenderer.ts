@@ -308,11 +308,11 @@ export default class DailyVCSWebRenderer {
     };
   }
 
-  private placeVideoSourceInDOM(el: HTMLElement, trackId: string) {
+  private placeVideoSourceInDOM(el: HTMLElement, participantId: string) {
     // place element in DOM so it gets updates
     el.setAttribute('style', 'display: none;');
-    if (trackId) {
-      el.setAttribute('data-video-remote-track-id', trackId);
+    if (participantId) {
+      el.setAttribute('data-video-id', participantId);
     }
     this.rootEl.appendChild(el);
   }
@@ -644,7 +644,8 @@ export default class DailyVCSWebRenderer {
             videoEl = prevSlot.element;
           } else {
             videoEl = document.createElement('video');
-            this.placeVideoSourceInDOM(videoEl, video.track.id);
+            this.placeVideoSourceInDOM(videoEl, video.id);
+
             videoEl.setAttribute('autoplay', 'true');
             videoEl.setAttribute('playsinline', 'true');
             videoEl.setAttribute('controls', 'false');
@@ -688,9 +689,7 @@ export default class DailyVCSWebRenderer {
     prevSlots
       .filter((ps) => newSlots.every((ns) => ns.id !== ps.id))
       .forEach((ps) => {
-        this.rootEl
-          .querySelector(`[data-video-remote-track-id="${ps?.track?.id}"]`)
-          ?.remove();
+        this.rootEl.querySelector(`[data-video-id="${ps?.id}"]`)?.remove();
       });
 
     let didChange = newSlots.length !== prevSlots.length;
