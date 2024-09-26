@@ -312,10 +312,10 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
-"@daily-co/daily-js@>=0.47.0":
-  version "0.63.0"
-  resolved "https://registry.yarnpkg.com/@daily-co/daily-js/-/daily-js-0.63.0.tgz#eab68425b8a3fd4fb32c4349f6c343f2aaa919b7"
-  integrity sha512-g2kzrUicqjpq+iuJrGtOxPSD1psrrsTg8RrWvO6fy1NNGD1nr4BOAM8DYld7MV3UtGlQAAZxpAaUzGCOAAb2JQ==
+"@daily-co/daily-js@>=0.71.2":
+  version "0.71.2"
+  resolved "https://registry.yarnpkg.com/@daily-co/daily-js/-/daily-js-0.71.2.tgz#7dcbacaf35eed06436af0e478b4bbd8546cf9fd1"
+  integrity sha512-wBhINS5gJE+EKp1RoWcnpjVn2cW5/3AhVsOroFvvU8DJHjwOgTffFoiVfPmn7Tes33Gx91h0diNOflDkEs1AQw==
   dependencies:
     "@babel/runtime" "^7.12.5"
     "@sentry/browser" "^7.60.1"

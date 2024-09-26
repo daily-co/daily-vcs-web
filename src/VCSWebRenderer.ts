@@ -308,11 +308,11 @@ export default class DailyVCSWebRenderer {
     };
   }
 
-  private placeVideoSourceInDOM(el: HTMLElement, trackId: string) {
+  private placeVideoSourceInDOM(el: HTMLElement, participantId: string) {
     // place element in DOM so it gets updates
     el.setAttribute('style', 'display: none;');
-    if (trackId) {
-      el.setAttribute('data-video-remote-track-id', trackId);
+    if (participantId) {
+      el.setAttribute('data-video-id', participantId);
     }
     this.rootEl.appendChild(el);
   }
@@ -343,7 +343,9 @@ export default class DailyVCSWebRenderer {
 
     const includePaused = this.includePausedVideo;
 
-    const { peerId: activeSpeakerId } = this.callObject.getActiveSpeaker();
+    const { peerId: activeSpeakerId } = this.callObject.getActiveSpeaker() ?? {
+      peerId: '',
+    };
 
     /*console.log(
       'includepaused %s, activespeaker %s, filtered participants: ',
@@ -604,7 +606,7 @@ export default class DailyVCSWebRenderer {
   private applyTracks(videos: VideoInput[]) {
     if (!this.sources || !videos) return;
 
-    //console.log('applyTracks %d: ', videos.length, videos);
+    // console.log('applyTracks %d: ', videos.length, videos);
 
     const prevSlots = this.sources.videoSlots;
     const newSlots: VideoInput[] = [];
@@ -644,7 +646,7 @@ export default class DailyVCSWebRenderer {
             videoEl = prevSlot.element;
           } else {
             videoEl = document.createElement('video');
-            this.placeVideoSourceInDOM(videoEl, video.track.id);
+            this.placeVideoSourceInDOM(videoEl, video.id);
           }
           videoEl.srcObject = mediaStream;
           videoEl.setAttribute('autoplay', 'true');
@@ -667,9 +669,7 @@ export default class DailyVCSWebRenderer {
     prevSlots
       .filter((ps) => newSlots.every((ns) => ns.id !== ps.id))
       .forEach((ps) => {
-        this.rootEl
-          .querySelector(`[data-video-remote-track-id="${ps?.track?.id}"]`)
-          ?.remove();
+        this.rootEl.querySelector(`[data-video-id="${ps?.id}"]`)?.remove();
       });
 
     let didChange = newSlots.length !== prevSlots.length;
