@@ -24,16 +24,6 @@ class ResizeObserverMock {
 
 (global as any).ResizeObserver = ResizeObserverMock;
 
-class MediaStreamMock {
-  constructor() {}
-
-  getTracks() {
-    return [];
-  }
-}
-
-(global as any).MediaStream = MediaStreamMock;
-
 class ImageMock {
   onload: (() => void) | null = null;
   onerror: (() => void) | null = null;
@@ -186,18 +176,23 @@ describe('VCSWebRenderer', () => {
 
     const videoInputs: VideoInput[] = [
       {
-        id: 'slot1',
-        track: { id: 'track1' } as MediaStreamTrack,
         displayName: 'User1',
-        type: 'camera',
+        dominant: true,
+        id: 'slot1',
         paused: false,
+        track: { id: 'track1' } as MediaStreamTrack,
+        type: 'camera',
       },
       {
-        id: 'slot2',
-        track: { id: 'track2' } as MediaStreamTrack,
         displayName: 'User2',
-        type: 'camera',
+        dominant: false,
+        id: 'slot2',
         paused: false,
+        track: {
+          kind: 'video',
+          id: 'track2',
+        } as MediaStreamTrack,
+        type: 'camera',
       },
     ];
 
@@ -205,12 +200,13 @@ describe('VCSWebRenderer', () => {
       assetImages: { ...renderer['sources'].assetImages },
       videoSlots: [
         {
-          id: 'slot1',
-          element: document.createElement('video'),
-          track: { id: 'track1' } as MediaStreamTrack,
           displayName: 'User1',
-          type: 'camera',
+          dominant: true,
+          element: document.createElement('video'),
+          id: 'slot1',
           paused: false,
+          track: { id: 'track1' } as MediaStreamTrack,
+          type: 'camera',
         },
       ],
     };
@@ -219,20 +215,22 @@ describe('VCSWebRenderer', () => {
 
     expect(renderer['sources'].videoSlots).toEqual([
       {
-        id: 'slot1',
-        element: expect.any(HTMLVideoElement),
-        track: { id: 'track1' },
         displayName: 'User1',
-        type: 'camera',
+        dominant: true,
+        element: expect.any(HTMLVideoElement),
+        id: 'slot1',
         paused: false,
+        track: { id: 'track1' },
+        type: 'camera',
       },
       {
-        id: 'slot2',
-        element: expect.any(HTMLVideoElement),
-        track: { id: 'track2' },
         displayName: 'User2',
-        type: 'camera',
+        dominant: false,
+        element: expect.any(HTMLVideoElement),
+        id: 'slot2',
         paused: false,
+        track: { kind: 'video', id: 'track2' },
+        type: 'camera',
       },
     ]);
 

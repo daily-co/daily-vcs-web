@@ -5,19 +5,25 @@ const createCallObject = (properties) => {
 
   return {
     ...emitter,
+    abortTestWebsocketConnectivity: jest.fn(),
     accessState: jest.fn(),
     activeSpeakerMode: jest.fn(),
     addFakeParticipant: jest.fn(),
     cycleCamera: jest.fn(),
     cycleMic: jest.fn(),
     destroy: jest.fn(),
-    detectAllFaces: jest.fn(),
     enumerateDevices: jest.fn(async () => ({
       devices: [],
     })),
     exitFullscreen: jest.fn(),
     geo: jest.fn(),
-    getActiveSpeaker: jest.fn(),
+    getActiveSpeaker: jest.fn(() => {
+      return {};
+    }),
+    getCpuLoadStats: jest.fn(async () => ({
+      cpuLoadState: 'low',
+      cpuLoadStateReason: 'none',
+    })),
     getDailyLang: jest.fn(),
     getInputDevices: jest.fn(async () => ({
       camera: {},
@@ -31,7 +37,7 @@ const createCallObject = (properties) => {
         },
       },
     })),
-    getMeetingSession: jest.fn(),
+    getMeetingSessionSummary: jest.fn(),
     getNetworkStats: jest.fn(),
     getNetworkTopology: jest.fn(),
     getReceiveSettings: jest.fn(async () => {}),
@@ -73,12 +79,11 @@ const createCallObject = (properties) => {
     setBandwidth: jest.fn(),
     setDailyLang: jest.fn(),
     setProxyUrl: jest.fn(),
-    setInputDevices: jest.fn(),
+    setIceConfig: jest.fn(),
     setInputDevicesAsync: jest.fn(),
     setLocalAudio: jest.fn(),
     setLocalVideo: jest.fn(),
     setNetworkTopology: jest.fn(),
-    setOutputDevice: jest.fn(),
     setOutputDeviceAsync: jest.fn(),
     setPlayNewParticipantSound: jest.fn(),
     setShowLocalVideo: jest.fn(),
@@ -99,6 +104,7 @@ const createCallObject = (properties) => {
     stopScreenShare: jest.fn(),
     stopTranscription: jest.fn(),
     subscribeToTracksAutomatically: jest.fn(),
+    testWebsocketConnectivity: jest.fn(),
     theme: jest.fn(),
     updateInputSettings: jest.fn(),
     updateLiveStreaming: jest.fn(),
@@ -113,10 +119,11 @@ const createCallObject = (properties) => {
   };
 };
 
-const mockedDailyIframe = {
+const mockedDailyCall = {
   createCallObject,
+  getCallInstance: jest.fn(() => null),
   supportedBrowser: jest.fn(),
   version: jest.fn(),
 };
 
-module.exports = mockedDailyIframe;
+module.exports = mockedDailyCall;
