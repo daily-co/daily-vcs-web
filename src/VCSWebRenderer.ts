@@ -685,52 +685,40 @@ export default class DailyVCSWebRenderer {
       }
 
       const prevSlot = prevSlots.find((it) => it.id === video.id);
-      if (prevSlot) {
-        // Check if it's a local camera track
-        if (this.callObject.participants().local.session_id === prevSlot.id) {
-          // Update if not equal
-          if (video.track && video.track.id !== prevSlot.track?.id) {
-            console.log('--- Update video tracks');
-            newSlots.push({
-              ...prevSlot,
-              track: video.track,
-            });
-            const elm = this.rootEl.querySelector(
-              `[data-video-id="${video?.id}"]`
-            ) as HTMLVideoElement;
-            if (!elm) continue;
-            console.log('--- elm: ', elm);
-            console.log('--- elm.srcObject: ', elm.srcObject);
-            const srcObject = elm.srcObject as MediaStream;
+      if (prevSlot && prevSlot.track?.id === video.track?.id) {
+        newSlots.push({
+          ...prevSlot,
+          dominant: video.dominant,
+          paused: video.paused,
+          displayName: video.displayName,
+        });
 
-            if (srcObject && prevSlot.track) {
-              srcObject.removeTrack(prevSlot.track);
-            }
+        if (video.track === undefined) continue;
+        if (prevSlot.track === undefined) continue;
 
-            srcObject.addTrack(video.track);
-
-            console.log('--- elm.srcObject after update: ', elm.srcObject);
-          }
-        } else if (prevSlot.track?.id === video.track?.id) {
-          newSlots.push({
-            ...prevSlot,
-            dominant: video.dominant,
-            paused: video.paused,
-            displayName: video.displayName,
-          });
+        const elm = this.rootEl.querySelector(
+          `[data-video-id="${video.id}"]`
+        ) as HTMLVideoElement | null;
+        if (!elm) {
+          console.error('video element not found for %s', video.id);
+          continue;
         }
 
-        // Replace the video track
+        const srcObject = elm.srcObject as MediaStream | null;
+        if (!srcObject) {
+          console.error('video element has no srcObject for %s', video.id);
+          continue;
+        }
 
-        // const newSlot: VideoInput = {
-        //   displayName: prevSlot.displayName,
-        //   dominant: prevSlot.dominant,
-        //   id: prevSlot.id,
-        //   type: prevSlot.type,
-        //   element: prevSlot.element,
-        //   paused: video.paused,
-        //   track: video.track,
-        // };
+        if (video.track?.id === srcObject.getVideoTracks()[0]?.id) {
+          continue;
+        }
+
+        if (srcObject && prevSlot.track) {
+          srcObject.removeTrack(prevSlot.track);
+        }
+
+        srcObject.addTrack(video.track);
       } else {
         let videoEl;
         if (video.track) {
