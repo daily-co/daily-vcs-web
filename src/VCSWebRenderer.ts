@@ -17,7 +17,7 @@ import type {
   WebFrameCb,
 } from './types';
 
-import { DailyCall } from '@daily-co/daily-js';
+import { DailyCall, DailyParticipant } from '@daily-co/daily-js';
 
 const MAX_VIDEO_INPUT_SLOTS = 20;
 const DEFAULT_ASPECT_RATIO = 16 / 9;
@@ -309,6 +309,7 @@ export default class DailyVCSWebRenderer {
   }
 
   private placeVideoSourceInDOM(el: HTMLElement, participantId: string) {
+    console.log('placing video source in DOM for', { el, participantId });
     // place element in DOM so it gets updates
     el.setAttribute('style', 'display: none;');
     if (participantId) {
@@ -347,12 +348,12 @@ export default class DailyVCSWebRenderer {
       peerId: '',
     };
 
-    /*console.log(
+    console.log(
       'includepaused %s, activespeaker %s, filtered participants: ',
       includePaused,
       activeSpeakerId,
       filteredParticipants
-    );*/
+    );
 
     for (const p of filteredParticipants) {
       const dominant = p.session_id === activeSpeakerId;
@@ -362,6 +363,7 @@ export default class DailyVCSWebRenderer {
         // when the track is paused
         videos.push(createVideoInputObject(p, dominant, 'rmpVideo'));
       } else {
+        console.log('--- p:', p.tracks?.video);
         if (includePaused || !isTrackOff(p?.tracks?.video?.state)) {
           videos.push(createVideoInputObject(p, dominant));
         }
@@ -385,6 +387,36 @@ export default class DailyVCSWebRenderer {
     this.vcsApi.setRoomPeerDescriptionsById(peers);
   }
 
+  private getParticipantTracks(p: DailyParticipant) {
+    interface Tracks {
+      videoTrack: MediaStreamTrack | null;
+      audioTrack: MediaStreamTrack | null;
+    }
+    const mediaTracks: Tracks = {
+      videoTrack: null,
+      audioTrack: null,
+    };
+
+    const tracks = p.tracks;
+    if (!tracks) return mediaTracks;
+
+    const vt = tracks.video;
+    const vs = vt?.state;
+    if (vt.persistentTrack && (vs === 'playable' || vs === 'loading')) {
+      mediaTracks.videoTrack = vt.persistentTrack;
+    }
+
+    // Only get audio track if this is a remote participant
+    if (!p.local) {
+      const at = tracks.audio;
+      const as = at?.state;
+      if (at.persistentTrack && (as === 'playable' || as === 'loading')) {
+        mediaTracks.audioTrack = at.persistentTrack;
+      }
+    }
+    return mediaTracks;
+  }
+
   private setupEventListeners() {
     this.callObject.on(
       'participant-joined',
@@ -402,6 +434,20 @@ export default class DailyVCSWebRenderer {
       'active-speaker-change',
       this.handleActiveSpeakerChange.bind(this)
     );
+    // this.callObject.on('track-started', (p) => {
+    //   if (!p.participant) return;
+    //   const tracks = this.getParticipantTracks(p.participant);
+    //   try {
+    //     this.updateMedia(p.participant.session_id, tracks);
+    //   } catch (e) {
+    //     console.warn(e);
+    //   }
+    // });
+    // this.callObject.on(
+    //   'track-stopped',
+    //   () => {}
+    //   //this.handleParticipantsChange.bind(this)
+    // );
   }
 
   private removeEventListeners() {
@@ -421,6 +467,14 @@ export default class DailyVCSWebRenderer {
       'active-speaker-change',
       this.handleActiveSpeakerChange.bind(this)
     );
+    // this.callObject.off(
+    //   'track-started',
+    //   this.handleParticipantsChange.bind(this)
+    // );
+    // this.callObject.off(
+    //   'track-stopped',
+    //   this.handleParticipantsChange.bind(this)
+    // );
   }
 
   /**
@@ -631,17 +685,57 @@ export default class DailyVCSWebRenderer {
       }
 
       const prevSlot = prevSlots.find((it) => it.id === video.id);
-      if (prevSlot && prevSlot.track?.id === video.track?.id) {
-        newSlots.push({
-          ...prevSlot,
-          dominant: video.dominant,
-          paused: video.paused,
-          displayName: video.displayName,
-        });
+      if (prevSlot) {
+        // Check if it's a local camera track
+        if (this.callObject.participants().local.session_id === prevSlot.id) {
+          // Update if not equal
+          if (video.track && video.track.id !== prevSlot.track?.id) {
+            console.log('--- Update video tracks');
+            newSlots.push({
+              ...prevSlot,
+              track: video.track,
+            });
+            const elm = this.rootEl.querySelector(
+              `[data-video-id="${video?.id}"]`
+            ) as HTMLVideoElement;
+            if (!elm) continue;
+            console.log('--- elm: ', elm);
+            console.log('--- elm.srcObject: ', elm.srcObject);
+            const srcObject = elm.srcObject as MediaStream;
+
+            if (srcObject && prevSlot.track) {
+              srcObject.removeTrack(prevSlot.track);
+            }
+
+            srcObject.addTrack(video.track);
+
+            console.log('--- elm.srcObject after update: ', elm.srcObject);
+          }
+        } else if (prevSlot.track?.id === video.track?.id) {
+          newSlots.push({
+            ...prevSlot,
+            dominant: video.dominant,
+            paused: video.paused,
+            displayName: video.displayName,
+          });
+        }
+
+        // Replace the video track
+
+        // const newSlot: VideoInput = {
+        //   displayName: prevSlot.displayName,
+        //   dominant: prevSlot.dominant,
+        //   id: prevSlot.id,
+        //   type: prevSlot.type,
+        //   element: prevSlot.element,
+        //   paused: video.paused,
+        //   track: video.track,
+        // };
       } else {
         let videoEl;
         if (video.track) {
           const mediaStream = new MediaStream([video.track]);
+          console.log('prevSlot?.element: ', prevSlot?.element, video);
           if (prevSlot?.element) {
             videoEl = prevSlot.element;
           } else {
@@ -652,7 +746,7 @@ export default class DailyVCSWebRenderer {
           videoEl.setAttribute('autoplay', 'true');
           videoEl.setAttribute('playsinline', 'true');
           videoEl.setAttribute('controls', 'false');
-          //console.log('created video el for %s', video.id);
+          console.log('created video el for %s', video.id);
         }
 
         newSlots.push({
@@ -669,6 +763,7 @@ export default class DailyVCSWebRenderer {
     prevSlots
       .filter((ps) => newSlots.every((ns) => ns.id !== ps.id))
       .forEach((ps) => {
+        console.log('removing video el for %s', ps.id);
         this.rootEl.querySelector(`[data-video-id="${ps?.id}"]`)?.remove();
       });
 
