@@ -343,7 +343,7 @@ export default class DailyVCSWebRenderer {
 
     const includePaused = this.includePausedVideo;
 
-    const { peerId: activeSpeakerId } = this.callObject.getActiveSpeaker();
+    const activeSpeakerId = this.callObject.getActiveSpeaker().peerId ?? '';
 
     /*console.log(
       'includepaused %s, activespeaker %s, filtered participants: ',
@@ -645,11 +645,32 @@ export default class DailyVCSWebRenderer {
           } else {
             videoEl = document.createElement('video');
             this.placeVideoSourceInDOM(videoEl, video.track.id);
+            videoEl.setAttribute('autoplay', 'true');
+            videoEl.setAttribute('playsinline', 'true');
+            videoEl.setAttribute('controls', 'false');
           }
-          videoEl.srcObject = mediaStream;
-          videoEl.setAttribute('autoplay', 'true');
-          videoEl.setAttribute('playsinline', 'true');
-          videoEl.setAttribute('controls', 'false');
+
+          if (!videoEl.srcObject) {
+            videoEl.srcObject = mediaStream;
+          }
+
+          const srcObject = videoEl.srcObject as MediaStream | null;
+          if (!srcObject) {
+            console.error('no srcObject for video el');
+            break;
+          }
+          const currentVideoTrack = srcObject.getVideoTracks()[0];
+
+          if (!currentVideoTrack) {
+            console.error('no video track for video el');
+            break;
+          }
+
+          if (currentVideoTrack.id !== video.track.id) {
+            srcObject.removeTrack(currentVideoTrack);
+            srcObject.addTrack(video.track);
+          }
+
           //console.log('created video el for %s', video.id);
         }
 
