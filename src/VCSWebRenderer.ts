@@ -638,8 +638,10 @@ export default class DailyVCSWebRenderer {
         });
       } else {
         let videoEl;
-        if (video.track) {
-          const mediaStream = new MediaStream([video.track]);
+        let paused = video.paused ?? false;
+        if (!video.track) {
+          paused = true;
+        } else {
           if (prevSlot?.element) {
             videoEl = prevSlot.element;
           } else {
@@ -652,18 +654,16 @@ export default class DailyVCSWebRenderer {
           }
 
           if (!videoEl.srcObject) {
-            videoEl.srcObject = mediaStream;
+            videoEl.srcObject = new MediaStream([video.track]);
           }
-
-          const srcObject = videoEl.srcObject as MediaStream | null;
-          if (!srcObject) {
-            console.error('no srcObject for video el');
-            break;
-          }
+          const srcObject = videoEl.srcObject as MediaStream;
           const currentVideoTrack = srcObject.getVideoTracks()[0];
-
           if (!currentVideoTrack) {
-            console.error('no video track for video el');
+            // shouldn't happen, we always set a track
+            console.error(
+              'no previous video track for video element, id %s',
+              video.id
+            );
             break;
           }
 
@@ -671,12 +671,11 @@ export default class DailyVCSWebRenderer {
             srcObject.removeTrack(currentVideoTrack);
             srcObject.addTrack(video.track);
           }
-
-          //console.log('created video el for %s', video.id);
         }
 
         newSlots.push({
           ...video,
+          paused,
           element: videoEl,
         });
 
