@@ -12,9 +12,18 @@ export default [
         name: 'DailyVCSWebRenderer',
         file: pkg.browser,
         format: 'umd',
+        sourcemap: true, // Add this line
       },
-      { file: pkg.main, format: 'cjs' },
-      { file: pkg.module, format: 'es' },
+      {
+        file: pkg.main,
+        format: 'cjs',
+        sourcemap: true, // Add this line
+      },
+      {
+        file: pkg.module,
+        format: 'es',
+        sourcemap: true, // Add this line
+      },
     ],
     plugins: [
       resolve(),

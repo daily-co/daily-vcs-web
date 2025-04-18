@@ -24,7 +24,6 @@ import DailyVCSWebRenderer from '@daily-co/daily-vcs-web';
 const callObject = DailyIframe.createCallObject();
 const rootEl = document.getElementById('vcs-wrapper'); // DOM element where the VCS composition will be rendered
 const opts = {
-  callObject: callObject,
   viewportSize: { w: 1280, h: 720 },
 };
 

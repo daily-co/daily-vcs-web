@@ -18,6 +18,8 @@ import type {
 } from './types';
 
 import { DailyCall } from '@daily-co/daily-js';
+import DailyVCSBaselineComposition from '@daily-co/vcs-composition-daily-baseline-web';
+
 
 const MAX_VIDEO_INPUT_SLOTS = 20;
 const DEFAULT_ASPECT_RATIO = 16 / 9;
@@ -114,7 +116,6 @@ export default class DailyVCSWebRenderer {
    * @param comp is the VCS composition.
    * @param rootEl is the DOM element where the VCS composition will be rendered.
    * @param opts is the options object.
-   * @param opts.callObject is the Daily callObject.
    * @param opts.callbacks is a map of callbacks.
    * @param opts.viewportSize is the size of the DOM element that will be rendered.
    * @param opts.defaultParams is a map of paramId to default value.
@@ -129,7 +130,7 @@ export default class DailyVCSWebRenderer {
    */
   constructor(
     callObject: DailyCall,
-    comp: VCSComposition,
+    // comp: VCSComposition,
     rootEl: HTMLElement,
     opts: Options
   ) {
@@ -138,11 +139,14 @@ export default class DailyVCSWebRenderer {
     }
     this.callObject = callObject;
 
-    if (!comp || typeof comp.startDOMOutputAsync !== 'function') {
-      console.error('VCSMeetingRenderer constructor needs a VCS composition');
-      return;
-    }
-    this.comp = comp;
+    // if (!comp || typeof comp.startDOMOutputAsync !== 'function') {
+    //   console.error('VCSMeetingRenderer constructor needs a VCS composition');
+    //   return;
+    // }
+    // this.comp = comp;
+
+    this.comp = DailyVCSBaselineComposition;
+
     this.getAssetUrlCb = opts.getAssetUrlCb;
     this.webFrameCb = opts?.webFrameCb ?? undefined;
 
@@ -327,6 +331,7 @@ export default class DailyVCSWebRenderer {
   }
 
   private handleParticipantsChange() {
+    // this.callObject.setLocalVideo(true).setLocalVideo(false);
     const participants = Object.fromEntries(
       Object.values(this.callObject.participants()).map((p) => [
         p.session_id,
@@ -345,12 +350,12 @@ export default class DailyVCSWebRenderer {
 
     const activeSpeakerId = this.callObject.getActiveSpeaker().peerId ?? '';
 
-    /*console.log(
+    console.log(
       'includepaused %s, activespeaker %s, filtered participants: ',
       includePaused,
       activeSpeakerId,
       filteredParticipants
-    );*/
+    );
 
     for (const p of filteredParticipants) {
       const dominant = p.session_id === activeSpeakerId;

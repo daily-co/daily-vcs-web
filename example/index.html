@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Example Page</title>
+  </head>
+  <body>
+    <h1>Welcome to the Example Page</h1>
+    <button onclick="joinCall()">Join Call</button>
+    <button onclick="startCamera()">Start Camera</button>
+    <button onclick="stopCamera()">Stop Camera</button>
+    <button onclick="startVCS()">Start VCS</button>
+    <div id="vcs-wrapper"></div>
+    <script crossorigin src="https://unpkg.com/@daily-co/daily-js"></script>
+    <!-- <script
+      type="module"
+      src="https://unpkg.com/@daily-co/vcs-composition-daily-baseline-web"
+    ></script> -->
+    <script type="module">
+      // @ts-check
+      import { DailyVCSWebRenderer } from '/dist/index.esm.js';
+
+      // Use the imported function
+      console.log('DailyVCSWebRenderer', DailyVCSWebRenderer);
+
+      const callObject = DailyIframe.createCallObject();
+      const rootEl = document.getElementById('vcs-wrapper'); // DOM element where the VCS composition will be rendered
+      const opts = {
+        callObject: callObject,
+        viewportSize: { w: 1280, h: 720 },
+        getAssetUrlCb: (name, namespace, type) => {
+          console.log('getAssetUrlCb', name, namespace, type);
+          switch (type) {
+            case 'font':
+              return `/example/Roboto-Medium.ttf`; // Not used
+            // case 'image':
+            //   return namespace === 'composition'
+            //     ? `/vcs/composition-assets/${name}`
+            //     : `/vcs/res/test-assets/${name}`;
+            default:
+              return undefined;
+          }
+        },
+
+        callbacks: {
+          onError(error) {
+            console.error('Error:', error);
+          },
+          onParamsChanged(params) {
+            console.log('Params changed:', params);
+          },
+          onStart() {
+            console.log('VCS started');
+          },
+          onStop() {
+            console.log('VCS stopped');
+            // callObject.setLocalVideo(false);
+            // callObject.setLocalAudio(false);
+          },
+        },
+      };
+
+      const renderer = new DailyVCSWebRenderer(
+        callObject,
+        // DailyVCSBaselineComposition,
+        rootEl,
+        opts
+      );
+
+      callObject.on('joined-meeting', (participant) => {
+        console.log('joined-meeting:', participant);
+        callObject.setLocalVideo(true).setLocalVideo(false);
+      });
+
+      function joinCall() {
+        callObject
+          .join({
+            url: 'https://hush.daily.co/demo',
+            startVideoOff: true,
+          })
+          .then(() => {
+            console.log('Joined call');
+          })
+          .catch((error) => {
+            console.error('Error joining call:', error);
+          });
+      }
+      function startCamera() {
+        callObject.setLocalVideo(true);
+      }
+      function stopCamera() {
+        callObject.setLocalVideo(false);
+      }
+      function startVCS() {
+        renderer.start();
+      }
+
+      window.joinCall = joinCall;
+      window.startCamera = startCamera;
+      window.stopCamera = stopCamera;
+      window.startVCS = startVCS;
+    </script>
+  </body>
+</html>
