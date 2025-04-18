@@ -18,8 +18,8 @@ import type {
 } from './types';
 
 import { DailyCall } from '@daily-co/daily-js';
+// @ts-ignore no types for this package
 import DailyVCSBaselineComposition from '@daily-co/vcs-composition-daily-baseline-web';
-
 
 const MAX_VIDEO_INPUT_SLOTS = 20;
 const DEFAULT_ASPECT_RATIO = 16 / 9;
